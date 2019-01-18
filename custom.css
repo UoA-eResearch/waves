@@ -1,0 +1,189 @@
+html, body,  #map{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+}
+#map {
+    height: calc(100% - 138px);
+}
+#title {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    width: 20%;
+    font-size: 2em;
+    text-align: center;
+    color: black;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: normal;
+}
+.vis-current-time {
+    pointer-events: all;
+}
+.vis-custom-time {
+    z-index: 10000;
+}
+.vis-custom-time div::before {
+    content: "";
+    background: black;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, white, blue 40%, black);
+    left: -2px;
+    display: block;
+    position: relative;
+    width: 25px;
+    height: 25px;
+}
+#timeline #buttons {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    z-index: 20000;
+}
+#curDateImg{
+    position: fixed;
+    bottom: 130px;
+    z-index: 10000;
+    width: 2em;
+    height: 3em;
+}
+.vis-drag-left,.vis-drag-right {
+    background: black;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, white, orange 30%, black);
+}
+#timeline {
+    position: absolute;
+    width: 100%;
+    height: 138px;
+    overflow: hidden;
+    bottom: 0;
+    z-index: 1000;
+    background-color: white;
+}
+#colorbar {
+    position: relative;
+    margin-top: 15px;
+    width: 80px;
+}
+#colorbar > #gradient {
+    width: 20px;
+    height: 100px;
+}
+#colorbar .label {
+    position: absolute;
+    left: 25px;
+    line-height: 0px;
+}
+#colorbar > #max {
+    top: 0;
+}
+#colorbar > #mid {
+    top: 50%;
+}
+#colorbar > #min {
+    bottom: 0;
+}
+
+#export {
+    z-index: 10000;
+    max-width: 20%;
+    max-height: calc(100% - 90px);
+    overflow: auto;
+    left: 10px;
+    top: 80px;
+    position: absolute;
+    background-color: white;
+    border-radius: 5px;
+    padding: 15px;
+    color: black;
+}
+
+#export h6 {
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#export small {
+    display: block;
+    margin-top: 10px;
+}
+
+.leaflet-draw-actions a {
+    color: white;
+    background-color: #007bff;
+}
+
+.leaflet-draw-actions a:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+    text-decoration: none;
+}
+
+#export h4 {
+    margin-top: 20px;
+}
+
+#downloadprogress {
+    color: white;
+}
+
+.leaflet-control-layers-toggle {
+    width: 30px !important;
+    height: 30px !important;
+}
+
+#download_info #control {
+    display: block;
+    width: 100%;
+    height: 45px;
+}
+
+.leaflet-draw div.leaflet-draw-section,div.leaflet-draw-toolbar>a {
+    display: inline-block !important;
+}
+.leaflet-draw-actions {
+    z-index: 10000;
+}
+.leaflet-draw-draw-polygon {
+    margin-right: 4px;
+    border-bottom: none !important;
+    border-right: 1px solid #ccc;
+}
+.info {
+    background-color: white;
+    padding: 15px;
+    color: black;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width: 130px;
+}
+
+.info h3 {
+    margin: 0 0 5px;
+}
+
+.vis-item-content {
+    text-align: center;
+}
+
+#graph {
+    height: 400px;
+    width: 800px;
+}
+
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
