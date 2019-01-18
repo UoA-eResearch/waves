@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import scipy.io
-from bottle import Bottle, run, request, abort
+from bottle import Bottle, run, request, response, abort
 import json
 import os
 
@@ -15,6 +15,12 @@ for f in files:
     date_range = f.split("-")[1]
     date_ranges.add(date_range)
 date_ranges = sorted(date_ranges)
+
+@app.hook('after_request')
+def enable_cors():
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
 
 @app.route('/ranges')
 def ranges():
@@ -45,5 +51,5 @@ def main():
             "results": results
         }
 
-run(app, host='localhost', port=8080)
+run(app, host='localhost', port=8081)
 
