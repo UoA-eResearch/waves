@@ -16,21 +16,6 @@ bounds._southWest.lat -= degreeLimit;
 bounds._southWest.lng -= degreeLimit;
 map.setMaxBounds(bounds);
 
-var colors = {
-    "1": [127, 0, 0],
-    "0.8": [255, 0, 0],
-    "0.6": [255, 127, 0],
-    "0.4": [255, 255, 0],
-    "0.2": [255, 255, 127],
-    "0": [255, 255, 255],
-    "-0.2": [127, 255, 255],
-    "-0.4": [0, 255, 255],
-    "-0.6": [0, 127, 255],
-    "-0.8": [0, 0, 255],
-    "-1": [0, 0, 127]
-}
-var colorKey = Object.keys(colors).map(parseFloat).sort(function (a, b) {  return a - b;  });
-
 var baseMaps = {
     "CartoDB Positron": L.tileLayer.provider('CartoDB.PositronNoLabels'),
     "CartoDB Dark Matter": L.tileLayer.provider("CartoDB.DarkMatterNoLabels"),
@@ -182,11 +167,11 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'info legend');
     var colors = [];
-    for (var i = 1; i >= -1; i -= .2) {
+    for (var i = 0; i <= 1; i += .2) {
         colors.push(getColor(i));
     }
     var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient" style="background-image: linear-gradient(' + colors.join(",") + ');"></div>';
-    colorbar += '<div id="max" class="label">1m</div><div id="mid" class="label">0m</div><div id="min" class="label">-1m</div>';
+    colorbar += '<div id="max" class="label">1</div><div id="mid" class="label">0.5</div><div id="min" class="label">0</div>';
     colorbar += '</div>';
     div.innerHTML = colorbar;
     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
@@ -195,26 +180,7 @@ legend.onAdd = function(map) {
 legend.addTo(map);
 
 function getColor(value){
-    if (value <= colorKey[0]) {
-        var color = colors[colorKey[0]];
-        return "rgb(" + color.join(",") + ")";
-    } else if (value >= colorKey[colorKey.length - 1]) {
-        var color = colors[colorKey[colorKey.length - 1]];
-        return "rgb(" + color.join(",") + ")";
-    }
-    for (var i = 0; i < colorKey.length - 1; i++) {
-        var low = colorKey[i];
-        var high = colorKey[i + 1];
-        if (value >= low && value <= high) {
-            var lowC = colors[low];
-            var highC = colors[high];
-            var factor = (value - low) / (high - low);
-            var r = Math.round(lowC[0] + (highC[0] - lowC[0]) * factor);
-            var g = Math.round(lowC[1] + (highC[1] - lowC[1]) * factor);
-            var b = Math.round(lowC[2] + (highC[2] - lowC[2]) * factor);
-            return "rgb(" + r + "," + g + "," + b + ")";
-        }
-    }
+    return "hsl(" + value * 250 + ",100%,50%)";
 }
 
 function unpack(rows, key) {
@@ -297,7 +263,7 @@ function popupHandler(popup) {
     }
 }
 
-var baseUrl = "https://stormsurge.nectar.auckland.ac.nz/storm/";
+var baseUrl = "http://localhost:8081/"
 var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
 var markerLookup = [];
 
@@ -356,16 +322,29 @@ function fetchDataForModel(model, minDate, maxDate) {
 var ONE_DAY_MS = 1000 * 60 * 60 * 24;
 var ONE_YEAR_MS = ONE_DAY_MS * 365;
 
-function fetchRangesForModel(model) {
-    $.getJSON(baseUrl + "ranges", { model: model }, function(data) {
-        var start = new Date(data.minDate);
-        var end = new Date(data.maxDate);
-        dataset.update({id: 1, content: model, start: start, end: end});
+function fetchRanges() {
+    $.getJSON(baseUrl + "ranges", function(data) {
+        console.log(data);
+        for (var k in data.keys) {
+            for (var i in data.keys[k]) {
+                var v = data.keys[k][i];
+                //console.log(k, v);
+                if (v == "Time" || v == "Xp" || v == "Yp") continue;
+                $("#model").append("<option>" + k + "-" + v);
+            }
+        }
+        var start = data.date_ranges[0].split("_")[0];
+        start = moment(start, "YYMMDD");
+        var end = data.date_ranges[data.date_ranges.length - 1];
+        end = end.split("_")[1];
+        end = moment(end, "YYMMDD").hour(23);
+        dataset.update({id: 1, start: start, end: end});
         var ct = timeline.getCustomTime(1);
+        console.log(start, end, ct);
         if (ct < start || ct > end) {
             timeline.setCustomTime(start, 1);
-            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + start.formatYYYYMMDD() + " 12:00", 1);
-            timeline.setWindow(start.getTime() - ONE_YEAR_MS, end.getTime() + ONE_YEAR_MS);
+            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + start.format("YYYY-MM-DD HH:mm"), 1);
+            timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"))
         }
         var dateRange = dataset.get(2);
         if (dateRange.start < start || dateRange.end > end) {
@@ -376,7 +355,7 @@ function fetchRangesForModel(model) {
         var dateString = timeline.getCustomTime(1).formatYYYYMMDD() + " 12:00";
         fetchDataForModel(model, dateString);
     }).fail(function(e) {
-        alert("There was an error fetching data ranges for " + model + ": " + e.status + " " + e.statusText);
+        alert("There was an error fetching data ranges " + ": " + e.status + " " + e.statusText);
         console.error(e);
     });
 }
@@ -385,7 +364,6 @@ $("#model").change(function(e) {
     window.model = this.value;
     markers.clearLayers();
     markerLookup = [];
-    fetchRangesForModel(this.value);
 });
 
 var interval;
@@ -630,8 +608,8 @@ var options = {
         overrideItems: false
     },
     snap: function (date, scale, step) {
-        date.setHours(12, 0, 0, 0);
-        return date;
+        var snap = 60 * 60 * 1000 * 3;
+        return Math.round(date / snap) * snap;
     },
     onMoving: function (item, callback) {
         console.log(item, callback);
@@ -658,8 +636,6 @@ timeline.on("select", function() {
 });
 
 timeline.on('timechanged', function(e) {
-    e.time.setHours(12, 0, 0, 0);
-    timeline.setCustomTime(e.time, 1);
     var dateString = e.time.formatYYYYMMDD() + " 12:00";
     timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
     console.log("timechange", e, dateString);
@@ -675,7 +651,7 @@ $(".vis-panel.vis-bottom").bind('wheel', function (event) {
     }
 });
 
-$(".vis-current-time").prepend('<img id="curDateImg" data-toggle="tooltip" data-placement="top" src="images/pin.svg" title="Current time: ' + new Date() + '"/>');
+//$(".vis-current-time").prepend('<img id="curDateImg" data-toggle="tooltip" data-placement="top" src="images/pin.svg" title="Current time: ' + new Date() + '"/>');
 
 var range = dataset.get(2);
 
@@ -710,7 +686,9 @@ $("#play").click(function() {
     }
 });
 
-var model = "Model_20CR";
+
+fetchRanges();
+var model = "PTDIR-Depth";
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     model = bits[0];
@@ -720,4 +698,4 @@ if (location.hash.length > 1) {
 }
 $("#model").val(model).change();
 var dateString = timeline.getCustomTime(1);
-timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
+timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);

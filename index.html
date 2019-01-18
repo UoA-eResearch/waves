@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <title>NZ Storm Surge Data Tool</title>
+        <title>NZ Wave Data Tool</title>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,48 +22,24 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-77710107-9"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'UA-77710107-9');
-        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
     </head>
     <body>
-        <h1 id="title">NZ Storm Surge Data Tool</h1>
+        <h1 id="title">NZ Wave Data Tool</h1>
         <div id="map">
             <div id="export">
                 <h3>Exporting</h3>
                 <h4>Step 1: Select a model</h4>
                 <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;">
-                    <option value="Model_20CR">Model 20CR (Past)</option>
-                    <option>ACCESS10 - Historical</option>
-                    <option>ACCESS10 - rcp4.5</option>
-                    <option>ACCESS10 - rcp8.5</option>
-                    <option>BCC-CSM - Historical</option>
-                    <option>BCC-CSM - rcp4.5</option>
-                    <option>BCC-CSM - rcp8.5</option>
-                    <option>CSIRO - Historical</option>
-                    <option>CSIRO - rcp4.5</option>
-                    <option>CSIRO - rcp8.5</option>
-                    <option>EC_EARTH - Historical</option>
-                    <option>EC_EARTH - rcp4.5</option>
-                    <option>EC_EARTH - rcp8.5</option>
-                    <option>GFDL - Historical</option>
-                    <option>GFDL - rcp4.5</option>
-                    <option>GFDL - rcp8.5</option>
-                    <option>INM-CM4 - Historical</option>
-                    <option>INM-CM4 - rcp4.5</option>
-                    <option>INM-CM4 - rcp8.5</option>
-                    <option>MIROC5 - Historical</option>
-                    <option>MIROC5 - rcp4.5</option>
-                    <option>MIROC5 - rcp8.5</option>
                 </select>
                 <small id="selectHelp" class="form-text">
-                    Model_20CR is a hindcast of past data. The other models are forecasts, with historical hindcasts for accuracy evaluation.
-                    RCP4.5 and RCP8.5 refer to different levels of greenhouse gas concentration, click
-                    <a href="https://en.wikipedia.org/wiki/Representative_Concentration_Pathways">here</a> for more information.
+                    PTDIR = partition of peak wave direction in degrees<br>
+                    PTDSPR = directional spreading (in degrees)<br>
+                    PDIR = peak wave direction in degrees<br>
+                    PTHSIGN = partition of the significant wave height (in m)<br>
+                    PTRTP = partition of the relative peak period (in s).<br>
+                    Click <a href="http://swanmodel.sourceforge.net/online_doc/swanuse/node32.html">here</a> or 
+                    <a href="https://publicwiki.deltares.nl/display/NETCDF/SWAN+Standard+names">here</a> for more information.
                 </small>
                 <div id="download_info">
                     <h4>Step 2: Select data points</h4>
