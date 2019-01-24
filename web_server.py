@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import scipy.io
+import numpy as np
 from bottle import Bottle, run, request, response, abort
 import json
 import os
 
 app = Bottle()
+
+last_mat = {"name": "", "mat": None}
 
 valid_keys = json.load(open("file_types_and_keys.json"))
 latlongs = json.load(open("latlongs.json"))
@@ -32,21 +35,32 @@ def ranges():
 
 @app.route('/')
 def main():
+    global last_mat
     island = request.params.get('island') or 'NI'
     ftype = request.params.get('file') or 'PTDIR'
     var = request.params.get('var') or 'Depth'
     dt = request.params.get('dt') or '19930101_000000'
     year = dt[2:4]
     mat = None
-    for f in files:
-        if f.startswith(island + "-" + year) and f.endswith(ftype + ".mat"):
-            print("loading " + f)
-            mat = scipy.io.loadmat("data/" + f)
+    if last_mat["name"].startswith(island + "-" + year) and last_mat["name"].endswith(ftype + ".mat"):
+        print("using cached mat")
+        mat = last_mat["mat"]
+    else:
+        for f in files:
+            if f.startswith(island + "-" + year) and f.endswith(ftype + ".mat"):
+                print("loading " + f)
+                mat = scipy.io.loadmat("data/" + f)
+                last_mat = {
+                    "name": f,
+                    "mat": mat
+                }
     if not mat:
         abort(500, "Mat for {}_{}_{}_{} not found!".format(island, ftype, var, dt))
     else:
         key = "{}_{}".format(var, dt)
-        results = mat[key].tolist()
+        results = mat[key]
+        results = np.where(np.isnan(results), None, results)
+        results = results.tolist()
         return {
             "results": results
         }
