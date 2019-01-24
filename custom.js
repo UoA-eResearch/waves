@@ -215,8 +215,8 @@ function popupHandler(popup) {
     var dt = dataset.get(2);
     var bounds = Terraformer.WKT.convert(popup.target.toGeoJSON().geometry);
     var payload = {
-        minDate: dt.start.formatYYYYMMDD() + " 12:00",
-        maxDate: dt.end.formatYYYYMMDD() + " 12:00",
+        minDate: dateFormat(dt.start),
+        maxDate: dateFormat(dt.end),
         model: window.model,
         bounds: bounds
     }
@@ -267,13 +267,14 @@ var baseUrl = "http://localhost:8081/"
 var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
 var markerLookup = [];
 
-function fetchDataForModel(model, minDate, maxDate) {
-    if (!maxDate) {
-        maxDate = minDate;
-    }
-    console.log("fetching", baseUrl, model, minDate, maxDate);
-    location.hash = model + "@" + minDate;
-    $.getJSON(baseUrl, { model: model, minDate: minDate, maxDate: maxDate }, function(data) {
+function fetchDataForModel(model, dt) {
+    dt = moment(dt).format("YYYYMMDD_HHmmss");
+    console.log("fetching", baseUrl, model, dt);
+    var bits = model.split("-");
+    var ftype = bits[0];
+    var subvar = bits[1];
+    location.hash = model + "@" + dt;
+    $.getJSON(baseUrl, { island: "NI", file: ftype, var: subvar, dt: dt }, function(data) {
         console.log("Got " + data.results.length + " results for " + model);
         if (data.results.length == 0) return;
         var minHeight = Infinity;
@@ -325,6 +326,7 @@ var ONE_YEAR_MS = ONE_DAY_MS * 365;
 function fetchRanges() {
     $.getJSON(baseUrl + "ranges", function(data) {
         console.log(data);
+        window.latlongs = data.latlongs;
         for (var k in data.keys) {
             for (var i in data.keys[k]) {
                 var v = data.keys[k][i];
@@ -333,6 +335,7 @@ function fetchRanges() {
                 $("#model").append("<option>" + k + "-" + v);
             }
         }
+        $("#model").val(window.model);
         var start = data.date_ranges[0].split("_")[0];
         start = moment(start, "YYMMDD");
         var end = data.date_ranges[data.date_ranges.length - 1];
@@ -341,19 +344,18 @@ function fetchRanges() {
         dataset.update({id: 1, start: start, end: end});
         var ct = timeline.getCustomTime(1);
         console.log(start, end, ct);
-        if (ct < start || ct > end) {
-            timeline.setCustomTime(start, 1);
-            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + start.format("YYYY-MM-DD HH:mm"), 1);
-            timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"))
-        }
+        timeline.setCustomTime(start, 1);
+        timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateFormat(start), 1);
+        timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"));
         var dateRange = dataset.get(2);
         if (dateRange.start < start || dateRange.end > end) {
             dataset.update({id: 2, start: start, end: end});
         }
         markers.clearLayers();
         markerLookup = [];
-        var dateString = timeline.getCustomTime(1).formatYYYYMMDD() + " 12:00";
-        fetchDataForModel(model, dateString);
+        var dateString = dateFormat(timeline.getCustomTime(1));
+        console.log(window.model);
+        fetchDataForModel(window.model, dateString);
     }).fail(function(e) {
         alert("There was an error fetching data ranges " + ": " + e.status + " " + e.statusText);
         console.error(e);
@@ -371,8 +373,8 @@ var interval;
 $("#download").click(function() {
     var dt = dataset.get(2);
     var payload = {
-        minDate: dt.start.formatYYYYMMDD() + " 12:00",
-        maxDate: dt.end.formatYYYYMMDD() + " 12:00",
+        minDate: dateFormat(dt.start),
+        maxDate: dateFormat(dt.end),
         model: window.model,
         format: "csv"
     }
@@ -489,11 +491,16 @@ $("#cancel_download").click(function() {
     }
 });
 
-Date.prototype.formatYYYYMMDD = function(){
-    var day = ("0" + this.getDate()).slice(-2);
-    var month = ("0" + (this.getMonth() + 1)).slice(-2);
-    var year = this.getFullYear();
-    return year + "-" + month + "-" + day;
+function dateFormat(date){
+    return moment(date).format("YYYY-MM-DD HH:mm");
+}
+
+function snapDate(date) {
+    var hour = date.getHours();
+    date.setHours(Math.round(hour / 3) * 3);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    return date;
 }
 
 // DOM element where the Timeline will be attached
@@ -508,10 +515,10 @@ dataset.on('update', function (event, properties) {
     var range = properties.data[0];
     if (range.id != 2) return;
     console.log(range);
-    $("#download_info #start").val(range.start.formatYYYYMMDD());
-    $("#download_info #end").val(range.end.formatYYYYMMDD());
-    $(".vis-drag-left").attr("title", "Export range control: click and drag to define the beginning of the time series you want to export. Currently set to " + range.start.formatYYYYMMDD());
-    $(".vis-drag-right").attr("title", "Export range control: click and drag to define the end of the time series you want to export. Currently set to " + range.end.formatYYYYMMDD());
+    $("#download_info #start").val(dateFormat(range.start));
+    $("#download_info #end").val(dateFormat(range.end));
+    $(".vis-drag-left").attr("title", "Export range control: click and drag to define the beginning of the time series you want to export. Currently set to " + dateFormat(range.start));
+    $(".vis-drag-right").attr("title", "Export range control: click and drag to define the end of the time series you want to export. Currently set to " + dateFormat(range.end));
     updateSelectedDays();
 });
 
@@ -591,8 +598,8 @@ $("#end").change(function() {
     updateSelectedDays();
 });
 
-$("#download_info #start").val(dataset.get(2).start.formatYYYYMMDD());
-$("#download_info #end").val(dataset.get(2).end.formatYYYYMMDD());
+$("#download_info #start").val(dateFormat(dataset.get(2).start));
+$("#download_info #end").val(dateFormat(dataset.get(2).end));
 updateSelectedDays();
 
 // Configuration for the Timeline
@@ -601,16 +608,13 @@ var options = {
     min: "1800-1-1",
     max: "2200-1-1",
     zoomable: true,
-    zoomMin: 1000 * 60 * 60 * 24 * 7,
+    zoomMin: 1000 * 60 * 60 * 24,
     editable: {
         updateTime: true,
         remove: false,
         overrideItems: false
     },
-    snap: function (date, scale, step) {
-        var snap = 60 * 60 * 1000 * 3;
-        return Math.round(date / snap) * snap;
-    },
+    snap: snapDate,/*
     onMoving: function (item, callback) {
         console.log(item, callback);
         var bounds = dataset.get(1);
@@ -623,7 +627,7 @@ var options = {
         dataset.update({id: 2, start: item.start, end: item.end});
 
         callback(item); // send back the (possibly) changed item
-    },
+    },*/
 };
 
 // Create a Timeline
@@ -636,10 +640,12 @@ timeline.on("select", function() {
 });
 
 timeline.on('timechanged', function(e) {
-    var dateString = e.time.formatYYYYMMDD() + " 12:00";
+    var dt = snapDate(e.time);
+    timeline.setCustomTime(dt, 1);
+    var dateString = dateFormat(dt);
     timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
     console.log("timechange", e, dateString);
-    fetchDataForModel(window.model, dateString);
+    //fetchDataForModel(window.model, dateString);
 });
 
 $(".vis-panel.vis-bottom").bind('wheel', function (event) {
@@ -655,8 +661,8 @@ $(".vis-panel.vis-bottom").bind('wheel', function (event) {
 
 var range = dataset.get(2);
 
-$(".vis-drag-left").attr("title", "Export range control: click and drag to define the beginning of the time series you want to export. Currently set to " + range.start.formatYYYYMMDD());
-$(".vis-drag-right").attr("title", "Export range control: click and drag to define the end of the time series you want to export. Currently set to " + range.end.formatYYYYMMDD());
+$(".vis-drag-left").attr("title", "Export range control: click and drag to define the beginning of the time series you want to export. Currently set to " + dateFormat(range.start));
+$(".vis-drag-right").attr("title", "Export range control: click and drag to define the end of the time series you want to export. Currently set to " + dateFormat(range.end));
 
 $('[data-toggle="tooltip"]').tooltip()
 
@@ -676,7 +682,7 @@ $("#play").click(function() {
                 newTime = bounds.start;
             }
             timeline.setCustomTime(newTime, 1);
-            var dateString = newTime.formatYYYYMMDD() + " 12:00";
+            var dateString = dateFormat(newTime);
             timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
             fetchDataForModel(window.model, dateString);
         }, 1000);
@@ -686,8 +692,6 @@ $("#play").click(function() {
     }
 });
 
-
-fetchRanges();
 var model = "PTDIR-Depth";
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
@@ -696,6 +700,7 @@ if (location.hash.length > 1) {
 } else {
     timeline.addCustomTime("1871-1-1 12:00", 1);
 }
-$("#model").val(model).change();
+window.model = model;
 var dateString = timeline.getCustomTime(1);
 timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
+fetchRanges();
