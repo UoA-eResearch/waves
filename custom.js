@@ -167,7 +167,7 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'info legend');
     var colors = [];
-    for (var i = 0; i <= 1; i += .2) {
+    for (var i = 1; i >= 0; i -= .2) {
         colors.push(getColor(i));
     }
     var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient" style="background-image: linear-gradient(' + colors.join(",") + ');"></div>';
@@ -180,7 +180,7 @@ legend.onAdd = function(map) {
 legend.addTo(map);
 
 function getColor(value){
-    return "hsl(" + value * 250 + ",100%,50%)";
+    return "hsl(" + (1 - value) * 250 + ",100%,50%)";
 }
 
 function unpack(rows, key) {
@@ -268,55 +268,46 @@ var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
 var markerLookup = [];
 
 function fetchDataForModel(model, dt) {
+    location.hash = model + "@" + dateFormat(dt);
     dt = moment(dt).format("YYYYMMDD_HHmmss");
     console.log("fetching", baseUrl, model, dt);
     var bits = model.split("-");
     var ftype = bits[0];
     var subvar = bits[1];
-    location.hash = model + "@" + dt;
-    $.getJSON(baseUrl, { island: "NI", file: ftype, var: subvar, dt: dt }, function(data) {
+    $.getJSON(baseUrl, { file: ftype, var: subvar, dt: dt }, function(data) {
         console.log(data);
-        console.log("Got " + data.results.length + " results for " + model);
-        if (data.results.length == 0) return;
-        var minVal = Infinity;
-        var maxVal = -Infinity;
-        for (var i in data.results) {
-            var row = data.results[i];
-            for (var j in row) {
-                var v = row[j];
-                if (!v) continue;
-                if (v < minVal) minVal = v;
-                if (v > maxVal) maxVal = v;
-            }
-        }
         var dp = 4;
-        var midVal = (maxVal + minVal) / 2;
-        $("#colorbar #max").text(maxVal.toFixed(dp));
+        var midVal = (data.max + data.min) / 2;
+        $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
-        $("#colorbar #min").text(minVal.toFixed(dp));
+        $("#colorbar #min").text(data.min.toFixed(dp));
         var n = 0;
-        for (var i in data.results) {
-            var row = data.results[i];
-            for (var j in row) {
-                n++;
-                var v = row[j];
-                if (!v) continue;
-                var lat = window.latlongs.ni.lat[i][j];
-                var lng = window.latlongs.ni.lng[i][j];
-                var title = "(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
-                var desc = title + ": " + v.toFixed(dp);
-                var progress = '<div class="progress">';
-                progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
-                progress += '</div></div><h6>Loading...</h6>'
-                var popup = '<h4>' + title + '</h4><div id="graph">' + progress + '</div>';
-                var normalised_height = (v - minVal) / (maxVal - minVal);
-                var color = getColor(normalised_height);
-                if (markerLookup[n]) {
-                    markerLookup[n].setStyle({color: color}).setTooltipContent(desc);
-                } else {
-                    var marker = L.circleMarker([lat, lng], {radius: 4, color: color, fillOpacity: 1})
-                        .addTo(markers).bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
-                    markerLookup[n] = marker;
+        var islands = ["ni", "si"];
+        for (var ii in islands) {
+            var island = islands[ii];
+            for (var i in data[island]) {
+                var row = data[island][i];
+                for (var j in row) {
+                    n++;
+                    var v = row[j];
+                    if (!v) continue;
+                    var lat = window.latlongs[island].lat[i][j];
+                    var lng = window.latlongs[island].lng[i][j];
+                    var title = "(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
+                    var desc = title + ": " + v.toFixed(dp);
+                    var progress = '<div class="progress">';
+                    progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
+                    progress += '</div></div><h6>Loading...</h6>'
+                    var popup = '<h4>' + title + '</h4><div id="graph">' + progress + '</div>';
+                    var normalized_v = (v - data.min) / (data.max - data.min);
+                    var color = getColor(normalized_v);
+                    if (markerLookup[n]) {
+                        markerLookup[n].setStyle({color: color}).setTooltipContent(desc);
+                    } else {
+                        var marker = L.circleMarker([lat, lng], {radius: 4, color: color, fillOpacity: 1, island: island, i: i, j: j})
+                            .addTo(markers).bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
+                        markerLookup[n] = marker;
+                    }
                 }
             }
         }
@@ -353,8 +344,10 @@ function fetchRanges() {
         dataset.update({id: 1, start: start, end: end});
         var ct = timeline.getCustomTime(1);
         console.log(start, end, ct);
-        timeline.setCustomTime(start, 1);
-        timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateFormat(start), 1);
+        if (ct < start || ct > end) {
+            timeline.setCustomTime(start, 1);
+            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateFormat(start), 1);
+        }
         timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"));
         var dateRange = dataset.get(2);
         if (dateRange.start < start || dateRange.end > end) {

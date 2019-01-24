@@ -8,7 +8,7 @@ import os
 
 app = Bottle()
 
-last_mat = {"name": "", "mat": None}
+mat_cache = []
 
 valid_keys = json.load(open("file_types_and_keys.json"))
 latlongs = json.load(open("latlongs.json"))
@@ -33,36 +33,57 @@ def ranges():
         "latlongs": latlongs
     }
 
+def process_mat(mat):
+    mat = np.where(np.isnan(mat), None, mat)
+    mat = mat.tolist()
+    return mat
+
 @app.route('/')
 def main():
-    global last_mat
-    island = request.params.get('island') or 'NI'
+    global mat_cache
     ftype = request.params.get('file') or 'PTDIR'
     var = request.params.get('var') or 'Depth'
     dt = request.params.get('dt') or '19930101_000000'
     year = dt[2:4]
     mat = None
-    if last_mat["name"].startswith(island + "-" + year) and last_mat["name"].endswith(ftype + ".mat"):
-        print("using cached mat")
-        mat = last_mat["mat"]
-    else:
-        for f in files:
-            if f.startswith(island + "-" + year) and f.endswith(ftype + ".mat"):
-                print("loading " + f)
-                mat = scipy.io.loadmat("data/" + f)
-                last_mat = {
-                    "name": f,
-                    "mat": mat
-                }
+    for m in mat_cache:
+        if m["year"] == year and m["ftype"] == ftype:
+            print("using cached mat")
+            mat = m
+            break
     if not mat:
-        abort(500, "Mat for {}_{}_{}_{} not found!".format(island, ftype, var, dt))
+        nimat = None
+        simat = None
+        for f in files:
+            if f.startswith("NI-" + year) and f.endswith(ftype + ".mat"):
+                print("loading " + f)
+                nimat = scipy.io.loadmat("data/" + f)
+            if f.startswith("SI-" + year) and f.endswith(ftype + ".mat"):
+                print("loading " + f)
+                simat = scipy.io.loadmat("data/" + f)
+        if len(mat_cache) > 5:
+            mat_cache.pop()
+        mat = {
+            "year": year,
+            "ftype": ftype,
+            "nimat": nimat,
+            "simat": simat
+        }
+        mat_cache.insert(0, mat)
+    if not mat:
+        abort(500, "Mat for {}_{}_{} not found!".format(ftype, var, dt))
     else:
         key = "{}_{}".format(var, dt)
-        results = mat[key]
-        results = np.where(np.isnan(results), None, results)
-        results = results.tolist()
+        nimat = mat["nimat"][key]
+        simat = mat["simat"][key]
+        nzmin = float(np.nanmin([np.nanmin(nimat), np.nanmin(simat)]))
+        nzmax = float(np.nanmax([np.nanmax(nimat), np.nanmax(simat)]))
+        print(nzmin, nzmax)
         return {
-            "results": results
+            "ni": process_mat(nimat),
+            "si": process_mat(simat),
+            "min": nzmin,
+            "max": nzmax
         }
 
 run(app, host='localhost', port=8081)
