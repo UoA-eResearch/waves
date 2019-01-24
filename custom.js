@@ -275,40 +275,49 @@ function fetchDataForModel(model, dt) {
     var subvar = bits[1];
     location.hash = model + "@" + dt;
     $.getJSON(baseUrl, { island: "NI", file: ftype, var: subvar, dt: dt }, function(data) {
+        console.log(data);
         console.log("Got " + data.results.length + " results for " + model);
         if (data.results.length == 0) return;
-        var minHeight = Infinity;
-        var maxHeight = -Infinity;
+        var minVal = Infinity;
+        var maxVal = -Infinity;
         for (var i in data.results) {
-            var e = data.results[i];
-            if (e.height < minHeight) minHeight = e.height;
-            if (e.height > maxHeight) maxHeight = e.height;
-        }
-        if (minHeight < -maxHeight) {
-            maxHeight = -minHeight;
-        }
-        if (maxHeight > -minHeight) {
-            minHeight = -maxHeight;
+            var row = data.results[i];
+            for (var j in row) {
+                var v = row[j];
+                if (!v) continue;
+                if (v < minVal) minVal = v;
+                if (v > maxVal) maxVal = v;
+            }
         }
         var dp = 4;
-        $("#colorbar #max").text(maxHeight.toFixed(dp) + "m");
-        $("#colorbar #min").text(minHeight.toFixed(dp) + "m");
+        var midVal = (maxVal + minVal) / 2;
+        $("#colorbar #max").text(maxVal.toFixed(dp));
+        $("#colorbar #mid").text(midVal.toFixed(dp));
+        $("#colorbar #min").text(minVal.toFixed(dp));
+        var n = 0;
         for (var i in data.results) {
-            var e = data.results[i];
-            var title = "(" + e.lat + "°," + e.lng + "°)";
-            var desc = title + ": " + e.height.toFixed(dp) + "m";
-            var progress = '<div class="progress">';
-            progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
-            progress += '</div></div><h6>Loading...</h6>'
-            var popup = '<h4>' + title + '</h4><div id="graph">' + progress + '</div>';
-            var normalised_height = 2 * (e.height - minHeight) / (maxHeight - minHeight) - 1;
-            var color = getColor(normalised_height);
-            if (markerLookup[i]) {
-                markerLookup[i].setStyle({color: color}).setTooltipContent(desc);
-            } else {
-                var marker = L.circleMarker([e.lat, e.lng], {radius: 4, color: color, fillOpacity: 1})
-                    .addTo(markers).bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
-                markerLookup[i] = marker;
+            var row = data.results[i];
+            for (var j in row) {
+                n++;
+                var v = row[j];
+                if (!v) continue;
+                var lat = window.latlongs.ni.lat[i][j];
+                var lng = window.latlongs.ni.lng[i][j];
+                var title = "(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
+                var desc = title + ": " + v.toFixed(dp);
+                var progress = '<div class="progress">';
+                progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
+                progress += '</div></div><h6>Loading...</h6>'
+                var popup = '<h4>' + title + '</h4><div id="graph">' + progress + '</div>';
+                var normalised_height = (v - minVal) / (maxVal - minVal);
+                var color = getColor(normalised_height);
+                if (markerLookup[n]) {
+                    markerLookup[n].setStyle({color: color}).setTooltipContent(desc);
+                } else {
+                    var marker = L.circleMarker([lat, lng], {radius: 4, color: color, fillOpacity: 1})
+                        .addTo(markers).bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
+                    markerLookup[n] = marker;
+                }
             }
         }
         if (subset) {
@@ -366,6 +375,7 @@ $("#model").change(function(e) {
     window.model = this.value;
     markers.clearLayers();
     markerLookup = [];
+    fetchDataForModel(this.value, timeline.getCustomTime(1));
 });
 
 var interval;
@@ -645,7 +655,7 @@ timeline.on('timechanged', function(e) {
     var dateString = dateFormat(dt);
     timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
     console.log("timechange", e, dateString);
-    //fetchDataForModel(window.model, dateString);
+    fetchDataForModel(window.model, dt);
 });
 
 $(".vis-panel.vis-bottom").bind('wheel', function (event) {
