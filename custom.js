@@ -293,7 +293,7 @@ function fetchDataForModel(model, dt) {
                     if (!v) continue;
                     var lat = window.latlongs[island].lat[i][j];
                     var lng = window.latlongs[island].lng[i][j];
-                    var title = "(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
+                    var title = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
                     var desc = title + ": " + v.toFixed(dp);
                     var progress = '<div class="progress">';
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
