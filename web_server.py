@@ -17,12 +17,7 @@ date_ranges = set()
 for f in files:
     date_range = f.split("-")[1]
     date_ranges.add(date_range)
-def cmp(a,b):
-    if a[0] == "9" and b[0] != "9":
-        return -1
-    else:
-        return a < b
-date_ranges = sorted(date_ranges, cmp=cmp)
+date_ranges = sorted([x for x in date_ranges if x[0] == "9"]) + sorted([x for x in date_ranges if x[0] != "9"])
 
 @app.hook('after_request')
 def enable_cors():
