@@ -263,7 +263,7 @@ function popupHandler(popup) {
     }
 }
 
-var baseUrl = "http://localhost:8081/"
+var baseUrl = "https://stormsurge.nectar.auckland.ac.nz/wave/"
 var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
 var markerLookup = {
     "ni": {},

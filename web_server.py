@@ -17,7 +17,12 @@ date_ranges = set()
 for f in files:
     date_range = f.split("-")[1]
     date_ranges.add(date_range)
-date_ranges = sorted(date_ranges)
+def cmp(a,b):
+    if a[0] == "9" and b[0] != "9":
+        return -1
+    else:
+        return a < b
+date_ranges = sorted(date_ranges, cmp=cmp)
 
 @app.hook('after_request')
 def enable_cors():
@@ -86,5 +91,5 @@ def main():
             "max": nzmax
         }
 
-run(app, host='localhost', port=8081)
+run(app, host='localhost', port=8082)
 
