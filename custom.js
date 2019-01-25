@@ -265,7 +265,12 @@ function popupHandler(popup) {
 
 var baseUrl = "http://localhost:8081/"
 var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
-var markerLookup = [];
+var markerLookup = {
+    "ni": {},
+    "si": {}
+};
+
+var dp = 4;
 
 function fetchDataForModel(model, dt) {
     location.hash = model + "@" + dateFormat(dt);
@@ -276,7 +281,7 @@ function fetchDataForModel(model, dt) {
     var subvar = bits[1];
     $.getJSON(baseUrl, { file: ftype, var: subvar, dt: dt }, function(data) {
         console.log(data);
-        var dp = 4;
+        markers.clearLayers();
         var midVal = (data.max + data.min) / 2;
         $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
@@ -291,23 +296,11 @@ function fetchDataForModel(model, dt) {
                     n++;
                     var v = row[j];
                     if (!v) continue;
-                    var lat = window.latlongs[island].lat[i][j];
-                    var lng = window.latlongs[island].lng[i][j];
-                    var title = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
-                    var desc = title + ": " + v.toFixed(dp);
-                    var progress = '<div class="progress">';
-                    progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
-                    progress += '</div></div><h6>Loading...</h6>'
-                    var popup = '<h4>' + title + '</h4><div id="graph">' + progress + '</div>';
+                    var marker = markerLookup[island][i + "_" + j];
+                    var desc = marker.options.desc + ": " + v.toFixed(dp);
                     var normalized_v = (v - data.min) / (data.max - data.min);
                     var color = getColor(normalized_v);
-                    if (markerLookup[n]) {
-                        markerLookup[n].setStyle({color: color}).setTooltipContent(desc);
-                    } else {
-                        var marker = L.circleMarker([lat, lng], {radius: 4, color: color, fillOpacity: 1, island: island, i: i, j: j})
-                            .addTo(markers).bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
-                        markerLookup[n] = marker;
-                    }
+                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(markers);
                 }
             }
         }
@@ -327,6 +320,25 @@ function fetchRanges() {
     $.getJSON(baseUrl + "ranges", function(data) {
         console.log(data);
         window.latlongs = data.latlongs;
+        var islands = ["ni", "si"];
+        for (var ii in islands) {
+            var island = islands[ii];
+            for (var i in data.latlongs[island].lat) {
+                var row = data.latlongs[island].lat[i];
+                for (var j in row) {
+                    var lat = data.latlongs[island].lat[i][j];
+                    var lng = data.latlongs[island].lng[i][j];
+                    var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
+                    var progress = '<div class="progress">';
+                    progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
+                    progress += '</div></div><h6>Loading...</h6>'
+                    var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
+                    var marker = L.circleMarker([lat, lng], {radius: 4, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc})
+                    .bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
+                    markerLookup[island][i + "_" + j] = marker;
+                }
+            }
+        }
         for (var k in data.keys) {
             for (var i in data.keys[k]) {
                 var v = data.keys[k][i];
@@ -353,8 +365,6 @@ function fetchRanges() {
         if (dateRange.start < start || dateRange.end > end) {
             dataset.update({id: 2, start: start, end: end});
         }
-        markers.clearLayers();
-        markerLookup = [];
         var dateString = dateFormat(timeline.getCustomTime(1));
         console.log(window.model);
         fetchDataForModel(window.model, dateString);
@@ -366,8 +376,6 @@ function fetchRanges() {
 
 $("#model").change(function(e) {
     window.model = this.value;
-    markers.clearLayers();
-    markerLookup = [];
     fetchDataForModel(this.value, timeline.getCustomTime(1));
 });
 
@@ -680,7 +688,7 @@ $("#play").click(function() {
         playInterval = setInterval(function() {
             var bounds = dataset.get(1);
             var ct = timeline.getCustomTime(1);
-            var newTime = new Date(ct.getTime() + ONE_DAY_MS);
+            var newTime = moment(ct).add(3, "hours");
             if (newTime < bounds.start || newTime > bounds.end) {
                 newTime = bounds.start;
             }
