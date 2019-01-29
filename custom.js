@@ -70,7 +70,8 @@ map.addControl(drawControl);
 
 $("#download_info #control").append($(".leaflet-draw"));
 
-var markers = L.layerGroup().addTo(map);
+var nimarkers = L.layerGroup().addTo(map);
+var simarkers = L.layerGroup().addTo(map);
 
 function updateSelection() {
     if (!subset) return;
@@ -78,7 +79,14 @@ function updateSelection() {
     if (subset.layerType == "circle") {
         var center = subset.getLatLng();
         var radius = subset.getRadius();
-        markers.eachLayer(function(marker) {
+        nimarkers.eachLayer(function(marker) {
+            var markerll = marker.getLatLng();
+            var dist = markerll.distanceTo(center);
+            if (dist <= radius) {
+                count++;
+            }
+        });
+        simarkers.eachLayer(function(marker) {
             var markerll = marker.getLatLng();
             var dist = markerll.distanceTo(center);
             if (dist <= radius) {
@@ -86,7 +94,12 @@ function updateSelection() {
             }
         });
     } else {
-        markers.eachLayer(function(marker) {
+        nimarkers.eachLayer(function(marker) {
+            if (subset.contains(marker.getLatLng())) {
+                count++;
+            }
+        });
+        simarkers.eachLayer(function(marker) {
             if (subset.contains(marker.getLatLng())) {
                 count++;
             }
@@ -156,7 +169,8 @@ var whitelabels = L.tileLayer.provider("Stamen.TonerLabels", {
 
 var overlays = {
     "Selections": drawnItems,
-    "Data points": markers,
+    "NI markers": nimarkers,
+    "SI markers": simarkers,
     "City labels": labels,
     "City labels (white)": whitelabels,
 }
@@ -281,7 +295,8 @@ function fetchDataForModel(model, dt) {
     var subvar = bits[1];
     $.getJSON(baseUrl, { file: ftype, var: subvar, dt: dt }, function(data) {
         console.log(data);
-        markers.clearLayers();
+        nimarkers.clearLayers();
+        simarkers.clearLayers();
         var midVal = (data.max + data.min) / 2;
         $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
@@ -300,7 +315,11 @@ function fetchDataForModel(model, dt) {
                     var desc = marker.options.desc + ": " + v.toFixed(dp);
                     var normalized_v = (v - data.min) / (data.max - data.min);
                     var color = getColor(normalized_v);
-                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(markers);
+                    if (island == "ni") {
+                        marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
+                    } else {
+                        marker.setStyle({color: color}).setTooltipContent(desc).addTo(simarkers);
+                    }
                 }
             }
         }
