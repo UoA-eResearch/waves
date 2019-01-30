@@ -293,10 +293,12 @@ function fetchDataForModel(model, dt) {
     var bits = model.split("-");
     var ftype = bits[0];
     var subvar = bits[1];
+    map.spin(true);
     $.getJSON(baseUrl, { file: ftype, var: subvar, dt: dt }, function(data) {
         console.log(data);
         nimarkers.clearLayers();
         simarkers.clearLayers();
+        map.spin(false);
         var midVal = (data.max + data.min) / 2;
         $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
