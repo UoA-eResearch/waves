@@ -547,8 +547,8 @@ dataset.on('update', function (event, properties) {
     var range = properties.data[0];
     if (range.id != 2) return;
     console.log(range);
-    $("#download_info #start").val(dateFormat(range.start));
-    $("#download_info #end").val(dateFormat(range.end));
+    $("#download_info #start").val(moment(range.start).format("YYYY-MM-DDTHH:mm"));
+    $("#download_info #end").val(moment(range.end).format("YYYY-MM-DDTHH:mm"));
     $(".vis-drag-left").attr("title", "Export range control: click and drag to define the beginning of the time series you want to export. Currently set to " + dateFormat(range.start));
     $(".vis-drag-right").attr("title", "Export range control: click and drag to define the end of the time series you want to export. Currently set to " + dateFormat(range.end));
     updateSelectedDays();
@@ -625,13 +625,13 @@ $("#end").change(function() {
     var end = new Date(this.value);
     if (end == "Invalid Date") return;
     if (end > bounds.end) end = bounds.end;
-    if (end < bounds.start.getTime() + ONE_DAY_MS) return;
+    if (end < bounds.start) return;
     dataset.update({id: 2, start: dataset.get(2).start, end: end});
     updateSelectedDays();
 });
 
-$("#download_info #start").val(dateFormat(dataset.get(2).start));
-$("#download_info #end").val(dateFormat(dataset.get(2).end));
+$("#download_info #start").val(moment(dataset.get(2).start).format("YYYY-MM-DDTHH:mm"));
+$("#download_info #end").val(moment(dataset.get(2).end).format("YYYY-MM-DDTHH:mm"));
 updateSelectedDays();
 
 // Configuration for the Timeline
