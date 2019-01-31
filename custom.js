@@ -294,7 +294,7 @@ function fetchDataForModel(model, dt) {
     var ftype = bits[0];
     var subvar = bits[1];
     map.spin(true);
-    $.getJSON(baseUrl, { file: ftype, var: subvar, dt: dt }, function(data) {
+    $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
         console.log(data);
         nimarkers.clearLayers();
         simarkers.clearLayers();
