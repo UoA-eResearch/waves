@@ -320,8 +320,6 @@ function fetchDataForModel(model, dt) {
     map.spin(true);
     $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
         console.log(data);
-        nimarkers.clearLayers();
-        simarkers.clearLayers();
         map.spin(false);
         var midVal = (data.max + data.min) / 2;
         $("#colorbar #max").text(data.max.toFixed(dp));
@@ -336,8 +334,15 @@ function fetchDataForModel(model, dt) {
                 for (var j in row) {
                     n++;
                     var v = row[j];
-                    if (!v) continue;
                     var marker = markerLookup[island][i + "_" + j];
+                    if (!v) {
+                        if (island == "ni") {
+                            nimarkers.removeLayer(marker);
+                        } else {
+                            simarkers.removeLayer(marker);
+                        }
+                        continue;
+                    }
                     var desc = marker.options.desc + ": " + v.toFixed(dp);
                     var normalized_v = (v - data.min) / (data.max - data.min);
                     var color = getColor(normalized_v);
