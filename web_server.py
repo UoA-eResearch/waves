@@ -148,5 +148,13 @@ def main():
             "max": nzmax
         }
 
-run(app, host='localhost', port=8082)
-
+if __name__ == "__main__":
+    app.run(
+        host='localhost',
+        port=8082,
+        server='gunicorn',
+        workers=8,
+        worker_class="geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
+        timeout=3600,
+        capture_output=True
+    )
