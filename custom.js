@@ -75,7 +75,10 @@ var simarkers = L.layerGroup().addTo(map);
 
 function updateSelection() {
     if (!subset) return;
+    window.nimask = [];
+    window.simask = [];
     var count = 0;
+    /*
     if (subset.layerType == "circle") {
         var center = subset.getLatLng();
         var radius = subset.getRadius();
@@ -93,18 +96,24 @@ function updateSelection() {
                 count++;
             }
         });
-    } else {
+    } else { */
         nimarkers.eachLayer(function(marker) {
             if (subset.contains(marker.getLatLng())) {
                 count++;
+                var x = parseInt(marker.options.i);
+                var y = parseInt(marker.options.j);
+                window.nimask.push([x,y]);
             }
         });
         simarkers.eachLayer(function(marker) {
             if (subset.contains(marker.getLatLng())) {
                 count++;
+                var x = parseInt(marker.options.i);
+                var y = parseInt(marker.options.j);
+                window.simask.push([x,y]);
             }
         });
-    }
+    //}
     console.log(count + " points in ", subset);
     $("#selected_points").text(count);
     updateTotalRows();
@@ -227,8 +236,8 @@ function plotData(container, results) {
 function popupHandler(popup) {
     console.log(popup);
     var dt = dataset.get(2);
-    var x = popup.target.options.i;
-    var y = popup.target.options.j;
+    var x = parseInt(popup.target.options.i);
+    var y = parseInt(popup.target.options.j);
     var island = popup.target.options.island;
 
     var bits = window.model.split("-");
@@ -242,11 +251,11 @@ function popupHandler(popup) {
         var: subvar,
     }
     if (island == "ni") {
-        payload.nimask = "[[" + x + "," + y + "]]";
-        payload.simask = "[]";
+        payload.nimask = JSON.stringify([[x,y]]);
+        payload.simask = JSON.stringify([]);
     } else {
-        payload.nimask = "[]";
-        payload.simask = "[[" + x + "," + y + "]]";
+        payload.nimask = JSON.stringify([]);
+        payload.simask = JSON.stringify([[x,y]]);
     }
     var container = $("#graph", popup.popup._contentNode);
 /*
@@ -419,21 +428,28 @@ var interval;
 
 $("#download").click(function() {
     var dt = dataset.get(2);
+
+    var bits = window.model.split("-");
+    var ftype = bits[0];
+    var subvar = bits[1];
+
     var payload = {
-        minDate: dateFormat(dt.start),
-        maxDate: dateFormat(dt.end),
-        model: window.model,
+        start: moment(dt.start).format("YYYYMMDD_HHmmss"),
+        end: moment(dt.end).format("YYYYMMDD_HHmmss"),
+        file: ftype,
+        var: subvar,
         format: "csv"
     }
     if (subset) {
-        wkt = Terraformer.WKT.convert(subset.toGeoJSON().geometry);
-        console.log(wkt);
-        payload.bounds = wkt;
+        payload.nimask = JSON.stringify(window.nimask);
+        payload.simask = JSON.stringify(window.simask);
     }
+    /*
     gtag('event', 'request', {
         'event_category': 'export',
         'event_label': JSON.stringify(payload)
     });
+    */
     $("#statustext").text("Preparing export...");
     $("#download").attr("disabled", "disabled");
     $("#download").attr("class", "btn btn-secondary");
@@ -442,6 +458,7 @@ $("#download").click(function() {
     $("#downloadprogress").css("width", "0%");
     $("#downloadprogress").attr("aria-valuenow", 0);
     $("#downloadprogresswrapper").show();
+    /*
     try {
         window.ws = new WebSocket(wsUrl);
         window.ws.onopen = function() {
@@ -476,6 +493,7 @@ $("#download").click(function() {
             }
         };
     } catch(err) {
+        */
         var start = new Date();
         clearInterval(interval);
         var est_time_instance = window.est_time;
@@ -494,24 +512,30 @@ $("#download").click(function() {
             var url = baseUrl + data.url;
             $("#statustext").html('Your export is ready for download - please click <a href="' + url + '">here</a> to download');
             $("#statustext a").click(function() {
+                /*
                 gtag('event', 'download', {
                     'event_category': 'export',
                     'event_label': url
                 });
+                */
             });
+            /*
             gtag('event', 'ready', {
                 'event_category': 'export',
                 'event_label': url
             });
+            */
         }).fail(function(e) {
             if (e.statusText != "abort" && e.statusText != "error") {
                 var error = "There was an error exporting data for " + window.model + ": " + e.status + " " + e.statusText;
                 alert(error);
                 $("#statustext").html(error);
+                /*
                 gtag('event', 'error', {
                     'event_category': 'export',
                     'event_label': e.statusText
                 });
+                */
             }
             console.error(e);
         }).always(function(e) {
@@ -521,7 +545,7 @@ $("#download").click(function() {
             $("#download").attr("class", "btn btn-primary");
             clearInterval(interval);
         });
-    }
+    //}
 });
 
 $("#cancel_download").click(function() {
