@@ -207,18 +207,18 @@ function plotData(container, results) {
     var data = [{
         type: "scatter",
         mode: "lines",
-        name: 'Storm Surge Height',
+        name: window.model,
         x: unpack(results, 'datetime'),
-        y: unpack(results, 'height'),
+        y: unpack(results, 'value'),
         line: {color: '#17BECF'}
     }];
     var layout = {
-        title: 'Storm surge height over time',
+        title: window.model,
         xaxis: {
             title: "Date/Time"
         },
         yaxis: {
-            title: "Storm Surge Height (m)"
+            title: window.model
         },
     };
     Plotly.newPlot(container[0], data, layout);
@@ -227,15 +227,29 @@ function plotData(container, results) {
 function popupHandler(popup) {
     console.log(popup);
     var dt = dataset.get(2);
-    var bounds = Terraformer.WKT.convert(popup.target.toGeoJSON().geometry);
+    var x = popup.target.options.i;
+    var y = popup.target.options.j;
+    var island = popup.target.options.island;
+
+    var bits = window.model.split("-");
+    var ftype = bits[0];
+    var subvar = bits[1];
+
     var payload = {
-        minDate: dateFormat(dt.start),
-        maxDate: dateFormat(dt.end),
-        model: window.model,
-        bounds: bounds
+        start: moment(dt.start).format("YYYYMMDD_HHmmss"),
+        end: moment(dt.end).format("YYYYMMDD_HHmmss"),
+        file: ftype,
+        var: subvar,
+    }
+    if (island == "ni") {
+        payload.nimask = "[[" + x + "," + y + "]]";
+        payload.simask = "[]";
+    } else {
+        payload.nimask = "[]";
+        payload.simask = "[[" + x + "," + y + "]]";
     }
     var container = $("#graph", popup.popup._contentNode);
-
+/*
     try {
         var ws = new WebSocket(wsUrl);
         ws.onopen = function() {
@@ -256,6 +270,7 @@ function popupHandler(popup) {
             }
         };
     } catch(err) {
+        */
         var start = new Date();
         var days = $('#selected_days').text();
         var est_time_instance = Math.round(days * rows_per_sec);
@@ -274,7 +289,7 @@ function popupHandler(popup) {
             container.text("");
             plotData(container, data.results);
         });
-    }
+    //}
 }
 
 var baseUrl = "https://stormsurge.nectar.auckland.ac.nz/wave/"
