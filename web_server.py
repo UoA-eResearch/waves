@@ -8,6 +8,9 @@ import os
 import csv
 from zipfile import ZipFile, ZIP_DEFLATED
 from datetime import datetime, timedelta
+import psutil
+
+MAX_MEMORY_PCT = 90
 
 app = Bottle()
 
@@ -90,7 +93,11 @@ def main():
                 if f.startswith("SI-" + year) and f.endswith(ftype + ".mat"):
                     print("loading " + f)
                     simat = scipy.io.loadmat("data/" + f)
-            if len(mat_cache) > 5:
+            current_memory_usage_pct = psutil.virtual_memory().percent
+            if current_memory_usage_pct > MAX_MEMORY_PCT:
+                print("Memory usage {}% is over {}%! Popping {}-{} from cache".format(
+                    current_memory_usage_pct, MAX_MEMORY_PCT, mat_cache[-1]["year"], mat_cache[-1]["ftype"]
+                ))
                 mat_cache.pop()
             if not nimat or not simat:
                 abort(500, "Mat for {}_{}_{} not found!".format(ftype, var, dt_string))
