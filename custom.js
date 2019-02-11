@@ -301,7 +301,7 @@ function popupHandler(popup) {
     //}
 }
 
-var baseUrl = "https://stormsurge.nectar.auckland.ac.nz/wave/"
+var baseUrl = "https://wave.storm-surge.cloud.edu.au/wave/"
 var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
 var markerLookup = {
     "ni": {},
