@@ -87,10 +87,10 @@ def main():
             nimat = None
             simat = None
             for f in files:
-                if f.startswith("NI-" + year) and f.endswith(ftype + ".mat"):
+                if f.startswith("NI-" + year) and f.endswith("-" + ftype + ".mat"):
                     print("loading " + f)
                     nimat = scipy.io.loadmat("data/" + f)
-                if f.startswith("SI-" + year) and f.endswith(ftype + ".mat"):
+                if f.startswith("SI-" + year) and f.endswith("-" + ftype + ".mat"):
                     print("loading " + f)
                     simat = scipy.io.loadmat("data/" + f)
             current_memory_usage_pct = psutil.virtual_memory().percent
