@@ -15,43 +15,17 @@
         "Xp", 
         "Yp"
     ], 
-    "PTDSPR": [
+    "LWAVP": [
         "Depth", 
-        "DsPT01", 
-        "DsPT02", 
-        "DsPT03", 
-        "DsPT04", 
-        "DsPT05", 
-        "DsPT06", 
-        "DsPT07", 
-        "DsPT08", 
-        "DsPT09", 
-        "DsPT10", 
+        "Lwavp", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
-    "PDIR": [
+    "WLEN": [
         "Depth", 
-        "PkDir", 
         "Time", 
-        "Xp", 
-        "Yp"
-    ], 
-    "hvars": [
-        "Depth", 
-        "Dir", 
-        "Dspr", 
-        "Hsig", 
-        "Qp", 
-        "RTm01", 
-        "RTm_10", 
-        "RTpeak", 
-        "TPsmoo", 
-        "Time", 
-        "Tm02", 
-        "Windv_x", 
-        "Windv_y", 
+        "Wlen", 
         "Xp", 
         "Yp"
     ], 
@@ -71,6 +45,13 @@
         "Xp", 
         "Yp"
     ], 
+    "DIR": [
+        "Depth", 
+        "Dir", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
     "PTRTP": [
         "Depth", 
         "Time", 
@@ -84,6 +65,155 @@
         "TpPT08", 
         "TpPT09", 
         "TpPT10", 
+        "Xp", 
+        "Yp"
+    ], 
+    "HSWELL": [
+        "Depth", 
+        "Hswell", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "PTDSPR": [
+        "Depth", 
+        "DsPT01", 
+        "DsPT02", 
+        "DsPT03", 
+        "DsPT04", 
+        "DsPT05", 
+        "DsPT06", 
+        "DsPT07", 
+        "DsPT08", 
+        "DsPT09", 
+        "DsPT10", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "PTWFRAC": [
+        "Depth", 
+        "Time", 
+        "WfPT01", 
+        "WfPT02", 
+        "WfPT03", 
+        "WfPT04", 
+        "WfPT05", 
+        "WfPT06", 
+        "WfPT07", 
+        "WfPT08", 
+        "WfPT09", 
+        "WfPT10", 
+        "Xp", 
+        "Yp"
+    ], 
+    "PTSTEEP": [
+        "Depth", 
+        "StPT01", 
+        "StPT02", 
+        "StPT03", 
+        "StPT04", 
+        "StPT05", 
+        "StPT06", 
+        "StPT07", 
+        "StPT08", 
+        "StPT09", 
+        "StPT10", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "FSPR": [
+        "Depth", 
+        "FSpr", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "RTP": [
+        "Depth", 
+        "RTpeak", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "HSIGN": [
+        "Depth", 
+        "Hsig", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "RTMM10": [
+        "Depth", 
+        "RTm_10", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "TPS": [
+        "Depth", 
+        "TPsmoo", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "PTWLEN": [
+        "Depth", 
+        "Time", 
+        "WlPT01", 
+        "WlPT02", 
+        "WlPT03", 
+        "WlPT04", 
+        "WlPT05", 
+        "WlPT06", 
+        "WlPT07", 
+        "WlPT08", 
+        "WlPT09", 
+        "WlPT10", 
+        "Xp", 
+        "Yp"
+    ], 
+    "TM02": [
+        "Depth", 
+        "Time", 
+        "Tm02", 
+        "Xp", 
+        "Yp"
+    ], 
+    "QP": [
+        "Depth", 
+        "Qp", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "PDIR": [
+        "Depth", 
+        "PkDir", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "RTM01": [
+        "Depth", 
+        "RTm01", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "DSPR": [
+        "Depth", 
+        "Dspr", 
+        "Time", 
+        "Xp", 
+        "Yp"
+    ], 
+    "WIND": [
+        "Depth", 
+        "Time", 
+        "Windv_x", 
+        "Windv_y", 
         "Xp", 
         "Yp"
     ]
