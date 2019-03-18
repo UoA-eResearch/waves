@@ -186,14 +186,19 @@ var overlays = {
 
 L.control.layers(baseMaps, overlays, { position: 'topright' }).addTo(map);
 
+function updateLegendColors(max = 250) {
+    var colors = [];
+    for (var i = 1; i >= 0; i -= .2) {
+        colors.push(getColor(i, max));
+    }
+    var gradientString = "linear-gradient(" + colors.join(",") + ")";
+    $("#gradient").css("background", gradientString);
+}
+
 var legend = L.control({position: 'bottomright'});
 legend.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'info legend');
-    var colors = [];
-    for (var i = 1; i >= 0; i -= .2) {
-        colors.push(getColor(i));
-    }
-    var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient" style="background-image: linear-gradient(' + colors.join(",") + ');"></div>';
+    var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient"></div>';
     colorbar += '<div id="max" class="label">1</div><div id="mid" class="label">0.5</div><div id="min" class="label">0</div>';
     colorbar += '</div>';
     div.innerHTML = colorbar;
@@ -201,9 +206,10 @@ legend.onAdd = function(map) {
     return div;
 }
 legend.addTo(map);
+updateLegendColors();
 
-function getColor(value){
-    return "hsl(" + (1 - value) * 250 + ",100%,50%)";
+function getColor(value, max = 250){
+    return "hsl(" + Math.round((1 - value) * max) + ",100%,50%)";
 }
 
 function unpack(rows, key) {
@@ -321,10 +327,17 @@ function fetchDataForModel(model, dt) {
     $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
         console.log(data);
         map.spin(false);
+        var max = 250;
+        if (subvar.toLowerCase().indexOf("dir") !== -1) {
+            data.min = 0;
+            data.max = 360;
+            max = 360;
+        }
         var midVal = (data.max + data.min) / 2;
         $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
         $("#colorbar #min").text(data.min.toFixed(dp));
+        updateLegendColors(max);
         var n = 0;
         var islands = ["ni", "si"];
         for (var ii in islands) {
@@ -345,7 +358,7 @@ function fetchDataForModel(model, dt) {
                     }
                     var desc = marker.options.desc + ": " + v.toFixed(dp);
                     var normalized_v = (v - data.min) / (data.max - data.min);
-                    var color = getColor(normalized_v);
+                    var color = getColor(normalized_v, max);
                     if (island == "ni") {
                         marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
                     } else {
