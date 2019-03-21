@@ -91,7 +91,7 @@ html, body,  #map{
     bottom: 0;
 }
 
-#export {
+#mainControls {
     z-index: 10000;
     max-width: 20%;
     max-height: calc(100% - 90px);
@@ -105,12 +105,12 @@ html, body,  #map{
     color: black;
 }
 
-#export h6 {
+#mainControls h6 {
     margin-bottom: 10px;
     margin-top: 10px;
 }
 
-#export small {
+#mainControls small {
     display: block;
     margin-top: 10px;
 }
@@ -126,7 +126,7 @@ html, body,  #map{
     text-decoration: none;
 }
 
-#export h4 {
+#mainControls h4 {
     margin-top: 20px;
 }
 

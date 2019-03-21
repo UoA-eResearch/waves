@@ -396,7 +396,7 @@ function fetchRanges() {
                 for (var j in row) {
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
-                    var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)";
+                    var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)/(" + i + "," + j + ")";
                     var progress = '<div class="progress">';
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
                     progress += '</div></div><h6>Loading...</h6>'
@@ -405,14 +405,6 @@ function fetchRanges() {
                     .bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
                 }
-            }
-        }
-        for (var k in data.keys) {
-            for (var i in data.keys[k]) {
-                var v = data.keys[k][i];
-                //console.log(k, v);
-                if (v == "Time" || v == "Xp" || v == "Yp") continue;
-                $("#model").append("<option>" + k + "-" + v);
             }
         }
         $("#model").val(window.model);
@@ -452,7 +444,9 @@ var interval;
 $("#download").click(function() {
     var dt = dataset.get(2);
 
-    var bits = window.model.split("-");
+    var model = $("#exportmodel").val();
+
+    var bits = model.split("-");
     var ftype = bits[0];
     var subvar = bits[1];
 
@@ -786,7 +780,7 @@ $("#play").click(function() {
     }
 });
 
-var model = "PTDIR-Depth";
+var model = "HSIGN-Hsig";
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     model = bits[0];
