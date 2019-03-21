@@ -345,6 +345,11 @@ function fetchDataForModel(model, dt) {
             for (var i in data[island]) {
                 var row = data[island][i];
                 for (var j in row) {
+                    if (island == "si" && j >= 127) {
+                        continue;
+                    } else if (island == "ni" && j <= 3) {
+                        continue;
+                    }
                     n++;
                     var v = row[j];
                     var marker = markerLookup[island][i + "_" + j];
