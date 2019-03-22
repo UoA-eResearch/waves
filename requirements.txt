@@ -1,5 +1,8 @@
 scipy
 bottle
+bottle-mysql
+mysqlclient
 gevent-websocket
 gunicorn
 psutil
+mysql-connector
