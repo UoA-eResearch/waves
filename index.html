@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"/>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" />
         <link rel="stylesheet" href="custom.css"/>
         <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet-src.js"></script>
         <script src="https://unpkg.com/leaflet-draw@1.0.3/dist/leaflet.draw.js"></script>
@@ -25,104 +26,113 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
         <script src="https://unpkg.com/leaflet-spin@1.1.0/leaflet.spin.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
+
     </head>
     <body>
         <h1 id="title">NZ Wave Data Tool</h1>
-        <div id="map">
-            <div id="mainControls">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="vis-tab" data-toggle="tab" href="#vis" role="tab" aria-controls="vis" aria-selected="true">Data Visualisation</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" id="export-tab" data-toggle="tab" href="#export" role="tab" aria-controls="export" aria-selected="false">Data Exporting</a>
-                    </li>
-                </ul>
-                <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
-                            <h4>Select a variable to visualise</h4>
-                            <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;">
-                                <option value="HSIGN-Hsig">Hsig</option>
-                                <option value="DIR-Dir">Dir</option>
-                                <option value="RTP-RTpeak">Tpeak</option>
-                                <option value="RTM01-RTm01">Tm01</option>
-                                <option value="RTM01-Depth">Depth</option>
-                            </select>
-                    </div>
-                    <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
+        <div id="map"></div>
+        <div id="mainControls">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="vis-tab" data-toggle="tab" href="#vis" role="tab" aria-controls="vis" aria-selected="true">Data Visualisation</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="export-tab" data-toggle="tab" href="#export" role="tab" aria-controls="export" aria-selected="false">Data Exporting</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
+                        <h4>Select a variable to visualise</h4>
+                        <form>
+                            <div class="form-group">
+                                <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;">
+                                    <option value="HSIGN-Hsig">Hsig</option>
+                                    <option value="DIR-Dir">Dir</option>
+                                    <option value="RTP-RTpeak">Tpeak</option>
+                                    <option value="RTM01-RTm01">Tm01</option>
+                                    <option value="RTM01-Depth">Depth</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                Displayed time:
+                                <input id="current" type="datetime-local" class="form-control"></input>
+                            </div>
+                        </form>
+                </div>
+                <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
 
-                        <h4>Step 1: Select a variable to export</h4>
-                        <select id="exportmodel" class="form-control" aria-describedby="selectHelp" style="outline: none;">
-                            <optgroup label="Integrated:">
-                                <option value="HSIGN-Hsig">Hsig</option>
-                                <option value="HSWELL-Hswell">Hswell</option>
-                                <option value="DIR-Dir">Dir</option>
-                                <option value="PDIR-PkDir">PkDir</option>
-                                <option value="RTM01-RTm01">Tm01</option>
-                                <option value="TM02-Tm02">Tm02</option>
-                                <option value="RTMM10-RTm_10">Tm_10</option>
-                                <option value="RTP-RTpeak">Tpeak</option>
-                                <option value="TPS-TPsmoo">TPsmoo</option>
-                                <option value="DPSR-Dspr">Dspr</option>
-                                <option value="FSPR-FSpr">FSpr</option>
-                                <option value="WLEN-Wlen">Wlen</option>
-                                <option value="QP-Qp">Qp</option>
-                                <option value="LWAVP-Lwavp">Lwavp</option>
-                            </optgroup>
-                            <optgroup label="Partitioned">
-                                <option value="PTDIR">Dir</option>
-                                <option value="PTDSPR">Dspr</option>
-                                <option value="PTHSIGN">Hsig</option>
-                                <option value="PTRTP">Tpeak</option>
-                                <option value="PTSTEEP">Steep</option>
-                                <option value="PTWLEN">Wlen</option>
-                                <option value="PTWFRAC">Wfrc</option>
-                            </optgroup>
-                            <optgroup label="Other:">
-                                <option value="RTM01-Depth">Bathymetry (Depth)</option>
-                                <option value="WIND-Windv_x">Winds - Windv_x</option>
-                                <option value="WIND-Windv_y">Winds - Windv_y</option>
-                            </optgroup>
-                        </select>
-                        <small id="selectHelp" class="form-text">
-                            PTDIR = partition of peak wave direction in degrees<br>
-                            PTDSPR = directional spreading (in degrees)<br>
-                            PDIR = peak wave direction in degrees<br>
-                            PTHSIGN = partition of the significant wave height (in m)<br>
-                            PTRTP = partition of the relative peak period (in s).<br>
-                            Click <a href="http://swanmodel.sourceforge.net/online_doc/swanuse/node32.html">here</a> or 
-                            <a href="https://publicwiki.deltares.nl/display/NETCDF/SWAN+Standard+names">here</a> for more information.
-                        </small>
+                    <h4>Step 1: Select variables to export</h4>
+                    <select id="exportmodel" class="form-control" aria-describedby="selectHelp" style="outline: none;" multiple>
+                        <optgroup label="Integrated:">
+                            <option value="HSIGN-Hsig">Hsig</option>
+                            <option value="HSWELL-Hswell">Hswell</option>
+                            <option value="DIR-Dir">Dir</option>
+                            <option value="PDIR-PkDir">PkDir</option>
+                            <option value="RTM01-RTm01">Tm01</option>
+                            <option value="TM02-Tm02">Tm02</option>
+                            <option value="RTMM10-RTm_10">Tm_10</option>
+                            <option value="RTP-RTpeak">Tpeak</option>
+                            <option value="TPS-TPsmoo">TPsmoo</option>
+                            <option value="DPSR-Dspr">Dspr</option>
+                            <option value="FSPR-FSpr">FSpr</option>
+                            <option value="WLEN-Wlen">Wlen</option>
+                            <option value="QP-Qp">Qp</option>
+                            <option value="LWAVP-Lwavp">Lwavp</option>
+                        </optgroup>
+                        <optgroup label="Partitioned">
+                            <option value="PTDIR">Dir</option>
+                            <option value="PTDSPR">Dspr</option>
+                            <option value="PTHSIGN">Hsig</option>
+                            <option value="PTRTP">Tpeak</option>
+                            <option value="PTSTEEP">Steep</option>
+                            <option value="PTWLEN">Wlen</option>
+                            <option value="PTWFRAC">Wfrc</option>
+                        </optgroup>
+                        <optgroup label="Other:">
+                            <option value="RTM01-Depth">Bathymetry (Depth)</option>
+                            <option value="WIND-Windv_x">Winds - Windv_x</option>
+                            <option value="WIND-Windv_y">Winds - Windv_y</option>
+                        </optgroup>
+                    </select>
+                    <small id="selectHelp" class="form-text">
+                        PTDIR = partition of peak wave direction in degrees<br>
+                        PTDSPR = directional spreading (in degrees)<br>
+                        PDIR = peak wave direction in degrees<br>
+                        PTHSIGN = partition of the significant wave height (in m)<br>
+                        PTRTP = partition of the relative peak period (in s).<br>
+                        Click <a href="http://swanmodel.sourceforge.net/online_doc/swanuse/node32.html">here</a> or 
+                        <a href="https://publicwiki.deltares.nl/display/NETCDF/SWAN+Standard+names">here</a> for more information.
+                    </small>
 
-                        <div id="download_info">
-                            <h4>Step 2: Select data points</h4>
-                            <small>To select a subset of data points, use the polygon or rectangle tool. Making a new selection will replace the previous selection.</small>
-                            <div id="control"></div>
-                            <h6>
-                                <span id="selected_points">0</span> data points selected.
-                            </h6>
-                            <h4>Step 3: Select a time range</h4>
-                            <small>Adjust the time range here or by dragging the ends of the timeseries export range control at the bottom.</small>
-                            <h6>Timeseries range:</h6>
-                            <form class="form-inline">
-                                <input id="start" type="datetime-local" class="form-control"></input>-
-                                <input id="end" type="datetime-local" class="form-control"></input>
-                            </form>
-                            <h6>
-                                <span id="selected_days">0</span> days selected.
-                            </h6>
-                            <h6>
-                                <span id="total_rows">0</span> total rows for export. <span id="est_time_wrapper">Estimated (worst-case) time to export: about <span id="est_time">1 minute</span></span>
-                            </h6>
-                            <button id="download" class="btn btn-primary">Export</button>
-                            <button id="cancel_download" class="btn btn-danger" style="display:none">Cancel</button>
-                            <h6 id="download_status">
-                                <div id="downloadprogresswrapper" class="progress" style="display: none">
-                                    <div id="downloadprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%"></div>
-                                </div>
-                                <h6 id="statustext"></h6>
-                            </h6>
-                        </div>
+                    <div id="download_info">
+                        <h4>Step 2: Select data points</h4>
+                        <small>To select a subset of data points, use the polygon or rectangle tool. Making a new selection will replace the previous selection.</small>
+                        <div id="control"></div>
+                        <h6>
+                            <span id="selected_points">0</span> data points selected.
+                        </h6>
+                        <h4>Step 3: Select a time range</h4>
+                        <small>Adjust the time range here or by dragging the ends of the timeseries export range control at the bottom.</small>
+                        <h6>Timeseries range:</h6>
+                        <form class="form-inline">
+                            <input id="start" type="datetime-local" class="form-control"></input>-
+                            <input id="end" type="datetime-local" class="form-control"></input>
+                        </form>
+                        <h6>
+                            <span id="selected_days">0</span> days selected.
+                        </h6>
+                        <h6>
+                            <span id="total_rows">0</span> total rows for export. <span id="est_time_wrapper">Estimated (worst-case) time to export: about <span id="est_time">1 minute</span></span>
+                        </h6>
+                        <button id="download" class="btn btn-primary">Export</button>
+                        <button id="cancel_download" class="btn btn-danger" style="display:none">Cancel</button>
+                        <h6 id="download_status">
+                            <div id="downloadprogresswrapper" class="progress" style="display: none">
+                                <div id="downloadprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%"></div>
+                            </div>
+                            <h6 id="statustext"></h6>
+                        </h6>
                     </div>
                 </div>
             </div>

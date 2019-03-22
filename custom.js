@@ -328,15 +328,26 @@ function fetchDataForModel(model, dt) {
         console.log(data);
         map.spin(false);
         var max = 250;
-        if (subvar.toLowerCase().indexOf("dir") !== -1) {
+        if (subvar == "Hsig") {
+            data.min = 0;
+            data.max = 6;
+        } else if (subvar == "RTpeak" || subvar == "RTm01") {
+            data.min = 1;
+            data.max = 25;
+        } else if (subvar == "Dir") {
             data.min = 0;
             data.max = 360;
             max = 360;
+        } else if (subvar == "Depth") {
+            data.min = 0;
+            data.max = 4560;
         }
         var midVal = (data.max + data.min) / 2;
+        dp = 0;
         $("#colorbar #max").text(data.max.toFixed(dp));
         $("#colorbar #mid").text(midVal.toFixed(dp));
         $("#colorbar #min").text(data.min.toFixed(dp));
+        dp = 4;
         updateLegendColors(max);
         var n = 0;
         var islands = ["ni", "si"];
@@ -345,9 +356,9 @@ function fetchDataForModel(model, dt) {
             for (var i in data[island]) {
                 var row = data[island][i];
                 for (var j in row) {
-                    if (island == "si" && j >= 127) {
+                    if (island == "si" && j > 127) {
                         continue;
-                    } else if (island == "ni" && j <= 3) {
+                    } else if (island == "ni" && j < 3) {
                         continue;
                     }
                     n++;
@@ -401,7 +412,7 @@ function fetchRanges() {
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
                     progress += '</div></div><h6>Loading...</h6>'
                     var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
-                    var marker = L.circleMarker([lat, lng], {radius: 4, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc})
+                    var marker = L.circle([lat, lng], {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc})
                     .bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
                 }
@@ -596,7 +607,7 @@ var container = document.getElementById('timeline');
 
 var dataset = new vis.DataSet([
     {id: 1, content: 'Data range', start: new Date(1871, 0, 1, 12), end: new Date(2100, 0, 1, 12), editable: false, selectable: false},
-    {id: 2, content: 'Timeseries export range', start: new Date(1871, 0, 1, 12), end: new Date(1900, 0, 1, 12), editable: {updateTime: true, remove: false}}
+    {id: 2, content: 'Timeseries export range', start: new Date(1871, 0, 1, 12), end: new Date(1900, 0, 1, 12), editable: {updateTime: true, remove: false}, style: "display: none"}
 ]);
 
 dataset.on('update', function (event, properties) {
@@ -676,6 +687,17 @@ $("#start").change(function() {
     updateSelectedDays();
 });
 
+$("#current").change(function() {
+    var bounds = dataset.get(1);
+    var newTime = new Date(this.value);
+    if (newTime == "Invalid Date") return;
+    if (newTime < bounds.start) return;
+    if (newTime > bounds.end) newTime = new Date(bounds.end);
+    newTime = snapDate(newTime);
+    timeline.setCustomTime(newTime, 1);
+    fetchDataForModel(window.model, newTime);
+})
+
 $("#end").change(function() {
     var bounds = dataset.get(1);
     var end = new Date(this.value);
@@ -731,6 +753,7 @@ timeline.on('timechanged', function(e) {
     var dt = snapDate(e.time);
     timeline.setCustomTime(dt, 1);
     var dateString = dateFormat(dt);
+    $("#current").val(moment(dt).format("YYYY-MM-DDTHH:mm"));
     timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
     console.log("timechange", e, dateString);
     fetchDataForModel(window.model, dt);
@@ -771,6 +794,7 @@ $("#play").click(function() {
             }
             timeline.setCustomTime(newTime, 1);
             var dateString = dateFormat(newTime);
+            $("#current").val(moment(newTime).format("YYYY-MM-DDTHH:mm"));
             timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
             fetchDataForModel(window.model, dateString);
         }, 1000);
@@ -779,6 +803,9 @@ $("#play").click(function() {
         clearInterval(playInterval);
     }
 });
+
+
+$('#exportmodel').multiselect();
 
 var model = "HSIGN-Hsig";
 if (location.hash.length > 1) {
@@ -791,4 +818,15 @@ if (location.hash.length > 1) {
 window.model = model;
 var dateString = timeline.getCustomTime(1);
 timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
+$("#current").val(moment(dateString).format("YYYY-MM-DDTHH:mm"));
 fetchRanges();
+
+$('#vis-tab').on('shown.bs.tab', function (e) {
+    console.log("vis");
+    dataset.update({id: 2, style:"display:none"});
+})
+
+$('#export-tab').on('shown.bs.tab', function (e) {
+    console.log("export");
+    dataset.update({id: 2, style:"display:block"});
+})
