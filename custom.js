@@ -72,6 +72,7 @@ $("#download_info #control").append($(".leaflet-draw"));
 
 var nimarkers = L.layerGroup().addTo(map);
 var simarkers = L.layerGroup().addTo(map);
+var arrowmarkers = L.layerGroup().addTo(map);
 
 function updateSelection() {
     if (!subset) return;
@@ -180,6 +181,7 @@ var overlays = {
     "Selections": drawnItems,
     "NI markers": nimarkers,
     "SI markers": simarkers,
+    "Arrows": arrowmarkers,
     "City labels": labels,
     "City labels (white)": whitelabels,
 }
@@ -200,7 +202,7 @@ legend.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'info legend');
     var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient"></div>';
     colorbar += '<div id="max" class="label">1</div><div id="mid" class="label">0.5</div><div id="min" class="label">0</div>';
-    colorbar += '</div>';
+    colorbar += '</div><img id="compass" src="coloured_compass.png" style="width:100%;height:100%;display:none"></img>';
     div.innerHTML = colorbar;
     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
     return div;
@@ -313,6 +315,38 @@ var markerLookup = {
     "ni": {},
     "si": {}
 };
+var arrowMarkerLookup = {
+    "ni": {},
+    "si": {}
+}
+
+ranges = {
+    "Hsig": {
+        min: 0,
+        max: 10,
+        suffix: "m"
+    },
+    "RTpeak": {
+        min: 1,
+        max: 25,
+        suffix: "s"
+    },
+    "RTm01": {
+        min: 1,
+        max: 25,
+        suffix: "s"
+    },
+    "Dir": {
+        min: 0,
+        max: 360,
+        suffix: "°"
+    },
+    "Depth": {
+        min: 0,
+        max: 1000,
+        suffix: "m"
+    }
+}
 
 var dp = 4;
 
@@ -327,28 +361,24 @@ function fetchDataForModel(model, dt) {
     $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
         console.log(data);
         map.spin(false);
-        var max = 250;
-        if (subvar == "Hsig") {
-            data.min = 0;
-            data.max = 6;
-        } else if (subvar == "RTpeak" || subvar == "RTm01") {
-            data.min = 1;
-            data.max = 25;
-        } else if (subvar == "Dir") {
-            data.min = 0;
-            data.max = 360;
-            max = 360;
-        } else if (subvar == "Depth") {
-            data.min = 0;
-            data.max = 4560;
+        var maxHSV = 250;
+        $("#colorbar").show();
+        $("#compass").hide();
+        var details = ranges[subvar];
+        var min = details.min;
+        var max = details.max;
+        if (subvar == "Dir") {
+            $("#colorbar").hide();
+            $("#compass").show();
+            maxHSV = 360;
         }
-        var midVal = (data.max + data.min) / 2;
+        var midVal = (max + min) / 2;
         dp = 0;
-        $("#colorbar #max").text(data.max.toFixed(dp));
-        $("#colorbar #mid").text(midVal.toFixed(dp));
-        $("#colorbar #min").text(data.min.toFixed(dp));
+        $("#colorbar #max").text(max.toFixed(dp) + details.suffix);
+        $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
+        $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
         dp = 4;
-        updateLegendColors(max);
+        updateLegendColors(maxHSV);
         var n = 0;
         var islands = ["ni", "si"];
         for (var ii in islands) {
@@ -373,8 +403,10 @@ function fetchDataForModel(model, dt) {
                         continue;
                     }
                     var desc = marker.options.desc + ": " + v.toFixed(dp);
-                    var normalized_v = (v - data.min) / (data.max - data.min);
-                    var color = getColor(normalized_v, max);
+                    var normalized_v = ((v - min) / (max - min));
+                    if (normalized_v < 0) normalized_v = 0;
+                    if (normalized_v > 1) normalized_v = 1;
+                    var color = getColor(normalized_v, maxHSV);
                     if (island == "ni") {
                         marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
                     } else {
@@ -415,6 +447,8 @@ function fetchRanges() {
                     var marker = L.circle([lat, lng], {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc})
                     .bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
+                    //var arrowMarker = L.shapeMarker([lat, lng], {shape: "triangle", radius: 5, island: island, i: i, j: j, desc: desc}).addTo(arrowmarkers);
+                    //arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
                 }
             }
         }
