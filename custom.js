@@ -320,7 +320,7 @@ var arrowMarkerLookup = {
     "si": {}
 }
 
-ranges = {
+var legendranges = {
     "Hsig": {
         min: 0,
         max: 10,
@@ -364,7 +364,7 @@ function fetchDataForModel(model, dt) {
         var maxHSV = 250;
         $("#colorbar").show();
         $("#compass").hide();
-        var details = ranges[subvar];
+        var details = legendranges[subvar];
         var min = details.min;
         var max = details.max;
         if (subvar == "Dir") {
@@ -439,13 +439,22 @@ function fetchRanges() {
                 for (var j in row) {
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
+                    var depth = data.depth[island][i][j];
                     var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)/(" + i + "," + j + ")";
                     var progress = '<div class="progress">';
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
                     progress += '</div></div><h6>Loading...</h6>'
                     var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
-                    var marker = L.circle([lat, lng], {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc})
-                    .bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
+                    var options = {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc};
+                    var marker = L.circle([lat, lng], options);
+                    if (Math.abs(depth - 50) < 10) {
+                        marker.addTo(map); // to getBounds a marker must be added to the map
+                        var bounds = marker.getBounds();
+                        map.removeLayer(marker);
+                        marker = L.rectangle(bounds, options);
+                    }
+
+                    marker.bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
                     //var arrowMarker = L.shapeMarker([lat, lng], {shape: "triangle", radius: 5, island: island, i: i, j: j, desc: desc}).addTo(arrowmarkers);
                     //arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
