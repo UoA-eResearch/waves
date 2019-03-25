@@ -18,6 +18,7 @@ mat_cache = []
 
 valid_keys = json.load(open("file_types_and_keys.json"))
 latlongs = json.load(open("latlongs.json"))
+depth = json.load(open("depth.json"))
 files = os.listdir("data")
 date_ranges = set()
 for f in files:
@@ -36,7 +37,8 @@ def ranges():
     return {
         "keys": valid_keys,
         "date_ranges": date_ranges,
-        "latlongs": latlongs
+        "latlongs": latlongs,
+        "depth": depth
     }
 
 @app.get('/exports/<filename>')
