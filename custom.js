@@ -72,7 +72,7 @@ $("#download_info #control").append($(".leaflet-draw"));
 
 var nimarkers = L.layerGroup().addTo(map);
 var simarkers = L.layerGroup().addTo(map);
-var arrowmarkers = L.layerGroup()
+var arrowmarkers = L.layerGroup().addTo(map);
 
 function updateSelection() {
     if (!subset) return;
@@ -363,6 +363,22 @@ function fetchDataForModel(model, dt) {
     var ftype = bits[0];
     var subvar = bits[1];
     map.spin(true);
+    if (subvar != "Dir") {
+        $.getJSON(baseUrl, { file: "DIR", var: "Dir", start: dt, end: dt }, function(data) {
+            var islands = ["ni", "si"];
+            for (var ii in islands) {
+                var island = islands[ii];
+                for (var key in arrowMarkerLookup[island]) {
+                    var arrowMarker = arrowMarkerLookup[island][key];
+                    console.log(arrowMarker);
+                    var o = arrowMarker.options;
+                    var v = data[island][o.i][o.j];
+                    arrowMarker.setRotationAngle(v);
+                    arrowMarker.addTo(arrowmarkers);
+                }
+            }
+        });
+    }
     $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
         console.log(data);
         map.spin(false);
@@ -378,7 +394,6 @@ function fetchDataForModel(model, dt) {
         } else {
             $("#colorbar").show();
             $("#compass").hide();
-            map.removeLayer(arrowmarkers);
         }
         var midVal = (max + min) / 2;
         dp = 0;
@@ -419,6 +434,7 @@ function fetchDataForModel(model, dt) {
                         var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
                         if (arrowMarker) {
                             arrowMarker.setRotationAngle(v);
+                            arrowMarker.addTo(arrowmarkers);
                         }
                     }
                 }
@@ -469,8 +485,11 @@ function fetchRanges() {
                         var arrowMarker = new L.marker([lat, lng],{
                             icon: arrowIcon,
                             rotationOrigin: "center center",
-                            interactive: false
-                        }).addTo(arrowmarkers);
+                            interactive: false,
+                            i: i,
+                            j: j,
+                            island: island
+                        });
                         arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
                     }
                 }
