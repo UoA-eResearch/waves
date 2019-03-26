@@ -350,6 +350,11 @@ var legendranges = {
 
 var dp = 4;
 
+var arrowIcon = new L.divIcon({
+    className : "arrowIcon",
+    html : "<div style='font-size: 3rem;color:black; -webkit-text-stroke: 1px black;'>↑</div>"
+})
+
 function fetchDataForModel(model, dt) {
     location.hash = model + "@" + dateFormat(dt);
     dt = moment(dt).format("YYYYMMDD_HHmmss");
@@ -362,15 +367,18 @@ function fetchDataForModel(model, dt) {
         console.log(data);
         map.spin(false);
         var maxHSV = 250;
-        $("#colorbar").show();
-        $("#compass").hide();
         var details = legendranges[subvar];
         var min = details.min;
         var max = details.max;
         if (subvar == "Dir") {
             $("#colorbar").hide();
             $("#compass").show();
+            map.addLayer(arrowmarkers);
             maxHSV = 360;
+        } else {
+            $("#colorbar").show();
+            $("#compass").hide();
+            map.removeLayer(arrowmarkers);
         }
         var midVal = (max + min) / 2;
         dp = 0;
@@ -386,12 +394,6 @@ function fetchDataForModel(model, dt) {
             for (var i in data[island]) {
                 var row = data[island][i];
                 for (var j in row) {
-                    if (island == "si" && j > 127) {
-                        continue;
-                    } else if (island == "ni" && j < 3) {
-                        continue;
-                    }
-                    n++;
                     var v = row[j];
                     var marker = markerLookup[island][i + "_" + j];
                     if (!marker) continue;
@@ -412,6 +414,12 @@ function fetchDataForModel(model, dt) {
                         marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
                     } else {
                         marker.setStyle({color: color}).setTooltipContent(desc).addTo(simarkers);
+                    }
+                    if (subvar == "Dir") {
+                        var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
+                        if (arrowMarker) {
+                            arrowMarker.setRotationAngle(v);
+                        }
                     }
                 }
             }
@@ -438,6 +446,11 @@ function fetchRanges() {
             for (var i in data.latlongs[island].lat) {
                 var row = data.latlongs[island].lat[i];
                 for (var j in row) {
+                    if (island == "si" && j > 127) {
+                        continue;
+                    } else if (island == "ni" && j < 3) {
+                        continue;
+                    }
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
                     var depth = data.depth[island][i][j];
@@ -452,8 +465,14 @@ function fetchRanges() {
 
                     marker.bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
-                    //var arrowMarker = L.shapeMarker([lat, lng], {shape: "triangle", radius: 5, island: island, i: i, j: j, desc: desc}).addTo(arrowmarkers);
-                    //arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
+                    if (i % 5 == 0 && j % 5 == 0) {
+                        var arrowMarker = new L.marker([lat, lng],{
+                            icon: arrowIcon,
+                            rotationOrigin: "center center",
+                            interactive: false
+                        }).addTo(arrowmarkers);
+                        arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
+                    }
                 }
             }
         }
