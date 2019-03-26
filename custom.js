@@ -370,7 +370,6 @@ function fetchDataForModel(model, dt) {
                 var island = islands[ii];
                 for (var key in arrowMarkerLookup[island]) {
                     var arrowMarker = arrowMarkerLookup[island][key];
-                    console.log(arrowMarker);
                     var o = arrowMarker.options;
                     var v = data[island][o.i][o.j];
                     arrowMarker.setRotationAngle(v);
@@ -865,6 +864,7 @@ $("#play").click(function() {
         playInterval = setInterval(function() {
             var bounds = dataset.get(1);
             var ct = timeline.getCustomTime(1);
+            ct = snapDate(ct);
             var newTime = moment(ct).add(3, "hours");
             if (newTime < bounds.start || newTime > bounds.end) {
                 newTime = bounds.start;
