@@ -72,7 +72,7 @@ $("#download_info #control").append($(".leaflet-draw"));
 
 var nimarkers = L.layerGroup().addTo(map);
 var simarkers = L.layerGroup().addTo(map);
-var arrowmarkers = L.layerGroup().addTo(map);
+var arrowmarkers = L.layerGroup();
 
 function updateSelection() {
     if (!subset) return;
