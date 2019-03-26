@@ -24,6 +24,14 @@ if "date" in files_to_process:
     # Build date table
     files_to_process.remove("date")
 
+    sql = """CREATE TABLE IF NOT EXISTS `date` (
+                `id` smallint(5) UNSIGNED NOT NULL,
+                `datetime` datetime NOT NULL,
+                PRIMARY KEY (`id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
+    cur.execute(sql)
+    db.commit()
+
     sql = "REPLACE INTO date (id, datetime) VALUES (%s, %s)"
     values = []
     for k, v in enumerate(times):
@@ -34,6 +42,18 @@ if "date" in files_to_process:
 
 if "ll" in files_to_process:
     files_to_process.remove("ll")
+
+    sql = """CREATE TABLE IF NOT EXISTS `latlong` (
+                `island` enum('NI','SI') NOT NULL,
+                `x` tinyint(3) UNSIGNED NOT NULL,
+                `y` tinyint(3) UNSIGNED NOT NULL,
+                `latlong` point NOT NULL,
+                PRIMARY KEY (`island`,`x`,`y`),
+                KEY `island` (`island`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
+    cur.execute(sql)
+    db.commit()
+
     nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
     simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
 
@@ -57,6 +77,14 @@ if "ll" in files_to_process:
 
 if "depth" in files_to_process:
     files_to_process.remove("depth")
+
+    sql = """CREATE TABLE IF NOT EXISTS `depth` (
+                `island` enum('NI','SI') NOT NULL,
+                `x` tinyint(3) UNSIGNED NOT NULL,
+                `y` tinyint(3) UNSIGNED NOT NULL,
+                `depth` double NOT NULL,
+                PRIMARY KEY (`island`,`x`,`y`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
     nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
     simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
 
@@ -78,8 +106,30 @@ if "depth" in files_to_process:
     db.commit()
     log("depth table built. {} rows inserted".format(cur.rowcount))
 
-for f in files_to_process:
-    log("loading " + f)
+# TODO: multiprocessing
+for i, f in enumerate(files_to_process):
+    log("loading {}/{}: {}".format(i, len(files_to_process), f))
+
+    filename_without_ext = os.path.splitext(os.path.basename(f))[0]
+    island, date_range, ftype = filename_without_ext.split("-")
+
+    start, end = date_range.split("_")
+    start = pd.to_datetime(start, yearfirst=True)
+    end = pd.to_datetime(end, yearfirst=True)
+    startid = times.get_loc(start)
+    endid = times.get_loc(end)
+
+    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE t={})".format(ftype, startid)
+    try:
+        cur.execute(sql)
+        result = cur.fetchone()[0]
+        # This file has already been inserted
+        if result:
+            log("Already done, skipping")
+            continue
+    except:
+        pass
+
     mat = scipy.io.loadmat(f)
     keys = mat.keys()
     unique_keys = set()
@@ -90,9 +140,6 @@ for f in files_to_process:
             key = key[:-16]
         if key not in ["Xp", "Yp", "Depth", "Time"]:
             unique_keys.add(key)
-    ftype = f.split("-")[-1][:-4]
-    filename_without_ext = os.path.splitext(os.path.basename(f))[0]
-    island, date_range, ftype = filename_without_ext.split("-")
     sql = """CREATE TABLE IF NOT EXISTS `{}` (
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
@@ -114,12 +161,6 @@ for f in files_to_process:
     values = []
 
     shape = mat["Xp"].shape
-
-    start, end = date_range.split("_")
-    start = pd.to_datetime(start, yearfirst=True)
-    end = pd.to_datetime(end, yearfirst=True)
-    startid = times.get_loc(start)
-    endid = times.get_loc(end)
     values = []
     for t in range(startid, endid + 1):
         date = times[t]
