@@ -372,7 +372,7 @@ function fetchDataForModel(model, dt) {
                     var arrowMarker = arrowMarkerLookup[island][key];
                     var o = arrowMarker.options;
                     var v = data[island][o.i][o.j];
-                    arrowMarker.setRotationAngle(v);
+                    arrowMarker.setRotationAngle(v + 180);
                     arrowMarker.addTo(arrowmarkers);
                 }
             }
@@ -432,7 +432,7 @@ function fetchDataForModel(model, dt) {
                     if (subvar == "Dir") {
                         var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
                         if (arrowMarker) {
-                            arrowMarker.setRotationAngle(v);
+                            arrowMarker.setRotationAngle(v + 180);
                             arrowMarker.addTo(arrowmarkers);
                         }
                     }
