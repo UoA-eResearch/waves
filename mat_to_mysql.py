@@ -6,11 +6,12 @@ import os
 import pandas as pd
 import numpy as np
 import mysql.connector
+import config
 
 db = mysql.connector.connect(
   host="localhost",
   user="wave",
-  passwd="wave",
+  passwd=config.passwd,
   db="wave"
 )
 cur = db.cursor()
