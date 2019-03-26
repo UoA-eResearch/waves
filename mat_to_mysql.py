@@ -7,16 +7,20 @@ import pandas as pd
 import numpy as np
 import mysql.connector
 import config
+from multiprocessing import Pool, cpu_count
 
-db = mysql.connector.connect(
-  host="localhost",
-  user="wave",
-  passwd=config.passwd,
-  db="wave"
-)
-cur = db.cursor()
 files_to_process = sys.argv[1:]
 times = pd.date_range("1993-01-01", "2013-01-01", freq="3H")
+
+def init():
+    global db, cur
+    db = mysql.connector.connect(
+        host="localhost",
+        user="wave",
+        passwd=config.passwd,
+        db="wave"
+    )
+    cur = db.cursor()
 
 def log(msg):
     print(pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S") + ": " + msg)
@@ -24,6 +28,7 @@ def log(msg):
 if "date" in files_to_process:
     # Build date table
     files_to_process.remove("date")
+    init()
 
     sql = """CREATE TABLE IF NOT EXISTS `date` (
                 `id` smallint(5) UNSIGNED NOT NULL,
@@ -43,6 +48,7 @@ if "date" in files_to_process:
 
 if "ll" in files_to_process:
     files_to_process.remove("ll")
+    init()
 
     sql = """CREATE TABLE IF NOT EXISTS `latlong` (
                 `island` enum('NI','SI') NOT NULL,
@@ -78,6 +84,7 @@ if "ll" in files_to_process:
 
 if "depth" in files_to_process:
     files_to_process.remove("depth")
+    init()
 
     sql = """CREATE TABLE IF NOT EXISTS `depth` (
                 `island` enum('NI','SI') NOT NULL,
@@ -109,8 +116,9 @@ if "depth" in files_to_process:
     db.commit()
     log("depth table built. {} rows inserted".format(cur.rowcount))
 
-# TODO: multiprocessing
-for i, f in enumerate(files_to_process):
+def load_file(args):
+    i = args[0]
+    f = args[1]
     log("loading {}/{}: {}".format(i, len(files_to_process), f))
 
     filename_without_ext = os.path.splitext(os.path.basename(f))[0]
@@ -129,7 +137,7 @@ for i, f in enumerate(files_to_process):
         # This file has already been inserted
         if result:
             log("Already done, skipping")
-            continue
+            return
     except:
         pass
 
@@ -184,3 +192,8 @@ for i, f in enumerate(files_to_process):
     db.commit()
 
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
+
+
+PROCESSES = cpu_count() / 2
+p = Pool(processes=PROCESSES, initializer=init)
+p.map(load_file, enumerate(files_to_process))
