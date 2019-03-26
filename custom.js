@@ -394,6 +394,7 @@ function fetchDataForModel(model, dt) {
                     n++;
                     var v = row[j];
                     var marker = markerLookup[island][i + "_" + j];
+                    if (!marker) continue;
                     if (!v) {
                         if (island == "ni") {
                             nimarkers.removeLayer(marker);
@@ -440,6 +441,7 @@ function fetchRanges() {
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
                     var depth = data.depth[island][i][j];
+                    if (depth < 10) continue;
                     var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)/(" + i + "," + j + ")";
                     var progress = '<div class="progress">';
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
@@ -447,12 +449,6 @@ function fetchRanges() {
                     var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
                     var options = {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc};
                     var marker = L.circle([lat, lng], options);
-                    if (Math.abs(depth - 50) < 10) {
-                        marker.addTo(map); // to getBounds a marker must be added to the map
-                        var bounds = marker.getBounds();
-                        map.removeLayer(marker);
-                        marker = L.rectangle(bounds, options);
-                    }
 
                     marker.bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
                     markerLookup[island][i + "_" + j] = marker;
