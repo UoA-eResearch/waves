@@ -86,6 +86,8 @@ if "depth" in files_to_process:
                 `depth` double NOT NULL,
                 PRIMARY KEY (`island`,`x`,`y`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
+    cur.execute(sql)
+    db.commit()
     nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
     simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
 

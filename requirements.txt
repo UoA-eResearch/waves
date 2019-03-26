@@ -6,3 +6,4 @@ gevent-websocket
 gunicorn
 psutil
 mysql-connector
+pandas
