@@ -411,6 +411,11 @@ function fetchDataForModel(model, dt) {
                     var v = row[j];
                     var marker = markerLookup[island][i + "_" + j];
                     if (!marker) continue;
+                    if (subvar == "RTpeak" || subvar == "RTm01") {
+                        if (v < 3) {
+                            v = null;
+                        }
+                    }
                     if (!v) {
                         if (island == "ni") {
                             nimarkers.removeLayer(marker);
