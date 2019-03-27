@@ -130,7 +130,7 @@ def load_file(args):
     startid = times.get_loc(start)
     endid = times.get_loc(end)
 
-    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE t={})".format(ftype, startid)
+    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island={} AND t={})".format(island, ftype, startid)
     try:
         cur.execute(sql)
         result = cur.fetchone()[0]
