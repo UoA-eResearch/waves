@@ -188,6 +188,7 @@ def load_file(args):
                 values.append(thisRow)
 
     log("values prepared, commencing executemany")
+    del mat
     cur.executemany(sql, values)
     db.commit()
 
