@@ -251,13 +251,35 @@ var legend = L.control({position: 'bottomright'});
 legend.onAdd = function(map) {
     var div = L.DomUtil.create('div', 'info legend');
     var colorbar = '<h3>Legend</h3><div id="colorbar"><div id="gradient"></div>';
-    colorbar += '<div id="max" class="label">1</div><div id="mid" class="label">0.5</div><div id="min" class="label">0</div>';
+    colorbar += '<input type="number" id="max" class="label" value=1 style="width:50px" /><span id="maxsuffix"></span><div id="mid" class="label">0.5</div><div id="min" class="label">0</div>';
     colorbar += '</div><img id="compass" src="coloured_compass.png" style="width:100%;height:100%;display:none"></img>';
     div.innerHTML = colorbar;
     div.firstChild.onmousedown = div.firstChild.ondblclick = L.DomEvent.stopPropagation;
     return div;
 }
 legend.addTo(map);
+$("#max").change(function() {
+    var val = parseFloat(this.value);
+    console.log(val);
+    var details = legendranges[window.subvar];
+    var midVal = (val + details.min) / 2;
+    $("#mid").text(midVal.toFixed(dp) + details.suffix);
+    var islands = ["ni", "si"];
+    for (var ii in islands) {
+        var island = islands[ii];
+        for (var key in markerLookup[island]) {
+            var marker = markerLookup[island][key];
+            var o = marker.options;
+            var normalized_v = ((o.v - details.min) / (val - details.min));
+            if (subvar == "Dir") {
+                var color = fullcolormap(normalized_v)
+            } else {
+                var color = colormap(normalized_v);
+            }
+            marker.setStyle({color: color});
+        }
+    }
+})
 updateLegendColors();
 
 function unpack(rows, key) {
@@ -380,6 +402,7 @@ function fetchDataForModel(model, dt) {
     var bits = model.split("-");
     var ftype = bits[0];
     var subvar = bits[1];
+    window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
         $.getJSON(baseUrl, { file: "DIR", var: "Dir", start: dt, end: dt }, function(data) {
@@ -409,19 +432,16 @@ function fetchDataForModel(model, dt) {
             map.addLayer(arrowmarkers);
             maxHSV = 360;
             updateLegendColors("full");
-        } else if (subvar == "Depth") {
-            updateLegendColors("log");
         } else {
             $("#colorbar").show();
             $("#compass").hide();
             updateLegendColors();
         }
         var midVal = (max + min) / 2;
-        dp = 0;
-        $("#colorbar #max").text(max.toFixed(dp) + details.suffix);
+        $("#colorbar #max").val(max.toFixed(dp));
+        $("#colorbar #maxsuffix").text(details.suffix);
         $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
         $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
-        dp = 4;
         var n = 0;
         var islands = ["ni", "si"];
         for (var ii in islands) {
@@ -445,14 +465,13 @@ function fetchDataForModel(model, dt) {
                         }
                         continue;
                     }
+                    marker.options.v = v;
                     var desc = marker.options.desc + ": " + v.toFixed(dp);
                     var normalized_v = ((v - min) / (max - min));
                     if (normalized_v < 0) normalized_v = 0;
                     if (normalized_v > 1) normalized_v = 1;
                     if (subvar == "Dir") {
                         var color = fullcolormap(normalized_v)
-                    } else if (subvar == "Depth") {
-                        var color = logcolormap(normalized_v);
                     } else {
                         var color = colormap(normalized_v);
                     }

@@ -106,3 +106,4 @@ venv.bak/
 data
 exports
 .vscode
+config.py

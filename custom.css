@@ -84,6 +84,11 @@ html, body,  #map{
 #colorbar > #max {
     top: 0;
 }
+#colorbar > #maxsuffix {
+    position: absolute;
+    right: -10px;
+    top: 5px;
+}
 #colorbar > #mid {
     top: 50%;
 }
