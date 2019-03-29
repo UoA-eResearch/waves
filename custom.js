@@ -262,7 +262,8 @@ $("#max").change(function() {
     var val = parseFloat(this.value);
     console.log(val);
     var details = legendranges[window.subvar];
-    var midVal = (val + details.min) / 2;
+    details.max = val;
+    var midVal = (details.max + details.min) / 2;
     $("#mid").text(midVal.toFixed(dp) + details.suffix);
     var islands = ["ni", "si"];
     for (var ii in islands) {
@@ -270,7 +271,7 @@ $("#max").change(function() {
         for (var key in markerLookup[island]) {
             var marker = markerLookup[island][key];
             var o = marker.options;
-            var normalized_v = ((o.v - details.min) / (val - details.min));
+            var normalized_v = ((o.v - details.min) / (details.max - details.min));
             if (subvar == "Dir") {
                 var color = fullcolormap(normalized_v)
             } else {
