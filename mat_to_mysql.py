@@ -190,6 +190,7 @@ def load_file(args):
     log("values prepared, commencing executemany")
     del mat
     cur.executemany(sql, values)
+    del values
     db.commit()
 
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
