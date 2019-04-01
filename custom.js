@@ -454,7 +454,7 @@ function fetchDataForModel(model, dt) {
                     var marker = markerLookup[island][i + "_" + j];
                     if (!marker) continue;
                     if (subvar == "RTpeak" || subvar == "RTm01") {
-                        if (v < 3) {
+                        if (v < 3.5) {
                             v = null;
                         }
                     }
