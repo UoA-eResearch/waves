@@ -14,7 +14,7 @@ map.on('zoomend', function() {
     if (zoom == 5) {
         $(".arrow").css("font-size", "1.5rem");
     } else if (zoom == 6) {
-        $(".arrow").css("font-size", "3rem");
+        $(".arrow").css("font-size", "2.5rem");
     } else if (zoom >= 7) {
         $(".arrow").css("font-size", "4rem");
     }
@@ -393,7 +393,7 @@ var dp = 4;
 
 var arrowIcon = new L.divIcon({
     className : "arrowIcon",
-    html : "<div class='arrow' style='font-size: 3rem;color:black; -webkit-text-stroke: 1px black;'>↑</div>"
+    html : "<div class='arrow' style='font-size: 2.5rem;color:black; -webkit-text-stroke: 1px black;'>↑</div>"
 })
 
 function fetchDataForModel(model, dt) {
