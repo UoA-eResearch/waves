@@ -79,7 +79,7 @@ def main():
     results = []
     while dt <= endDT:
         dt_string = dt.strftime("%Y%m%d_%H%M%S")
-        ymd = dt_string.split("_")[0]
+        ymd = dt.strftime("%y%m%d") # 2 digit year
         mat = None
         for m in mat_cache:
             if m["fstart"] <= ymd and m["fend"] >= ymd and m["ftype"] == ftype:
