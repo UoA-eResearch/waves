@@ -292,6 +292,10 @@ var chartProgressInterval;
 function plotData(container, results) {
     var d3 = Plotly.d3
     var dts = unpack(results, 'datetime')
+    for (var i in dts) {
+        dts[i] = moment(dts[i], "YYYYMMDD_HHmmss").format("YYYY-MM-DD HH:mm:ss");
+    }
+    console.log(dts)
     var values = unpack(results, 'value')
     var mean = d3.mean(values)
     var data = [{
@@ -540,11 +544,6 @@ function fetchRanges() {
             for (var i in data.latlongs[island].lat) {
                 var row = data.latlongs[island].lat[i];
                 for (var j in row) {
-                    if (island == "si" && j > 127) {
-                        continue;
-                    } else if (island == "ni" && j < 3) {
-                        continue;
-                    }
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
                     var depth = data.depth[island][i][j];
@@ -589,7 +588,7 @@ function fetchRanges() {
         timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"));
         var dateRange = dataset.get(2);
         if (dateRange.start < start || dateRange.end > end) {
-            dataset.update({id: 2, start: start, end: end});
+            dataset.update({id: 2, start: start, end: start.clone().add(5, "months")});
         }
         var dateString = dateFormat(timeline.getCustomTime(1));
         console.log(window.model);
