@@ -290,12 +290,16 @@ function unpack(rows, key) {
 var chartProgressInterval;
 
 function plotData(container, results) {
+    var d3 = Plotly.d3
+    var dts = unpack(results, 'datetime')
+    var values = unpack(results, 'value')
+    var mean = d3.mean(values)
     var data = [{
         type: "scatter",
         mode: "lines",
         name: window.model,
-        x: unpack(results, 'datetime'),
-        y: unpack(results, 'value'),
+        x: dts,
+        y: values,
         line: {color: '#17BECF'}
     }];
     var layout = {
@@ -306,8 +310,23 @@ function plotData(container, results) {
         yaxis: {
             title: window.model
         },
+        shapes: [
+            {
+                type: 'line',
+                x0: d3.min(dts),
+                y0: mean,
+                x1: d3.max(dts),
+                y1: mean,
+                line: {
+                    color: 'red',
+                    width: 4,
+                    dash: 'dashdot'
+                }
+            },
+        ]
     };
     Plotly.newPlot(container[0], data, layout);
+    $(container).append("Mean=" + mean);
 }
 
 function popupHandler(popup) {
@@ -396,6 +415,82 @@ var arrowIcon = new L.divIcon({
     html : "<div class='arrow' style='font-size: 2.5rem;color:black; -webkit-text-stroke: 1px black;'>↑</div>"
 })
 
+function handleData(data) {
+    console.log(data);
+    map.spin(false);
+    var maxHSV = 250;
+    var details = legendranges[subvar];
+    var min = details.min;
+    var max = details.max;
+    if (subvar == "Dir") {
+        //$("#colorbar").hide();
+        //$("#compass").show();
+        map.addLayer(arrowmarkers);
+        maxHSV = 360;
+        updateLegendColors("full");
+    } else {
+        $("#colorbar").show();
+        $("#compass").hide();
+        updateLegendColors();
+    }
+    var midVal = (max + min) / 2;
+    $("#colorbar #max").val(max.toFixed(dp));
+    $("#colorbar #maxsuffix").text(details.suffix);
+    $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
+    $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
+    var n = 0;
+    var islands = ["ni", "si"];
+    for (var ii in islands) {
+        var island = islands[ii];
+        for (var i in data[island]) {
+            var row = data[island][i];
+            for (var j in row) {
+                var v = row[j];
+                var marker = markerLookup[island][i + "_" + j];
+                if (!marker) continue;
+                if (subvar == "RTpeak" || subvar == "RTm01") {
+                    if (v < 3.5) {
+                        v = null;
+                    }
+                }
+                if (!v) {
+                    if (island == "ni") {
+                        nimarkers.removeLayer(marker);
+                    } else {
+                        simarkers.removeLayer(marker);
+                    }
+                    continue;
+                }
+                marker.options.v = v;
+                var desc = marker.options.desc + ": " + v.toFixed(dp);
+                var normalized_v = ((v - min) / (max - min));
+                if (normalized_v < 0) normalized_v = 0;
+                if (normalized_v > 1) normalized_v = 1;
+                if (subvar == "Dir") {
+                    var color = fullcolormap(normalized_v)
+                } else {
+                    var color = colormap(normalized_v);
+                }
+                if (island == "ni") {
+                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
+                } else {
+                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(simarkers);
+                }
+                if (subvar == "Dir") {
+                    var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
+                    if (arrowMarker) {
+                        arrowMarker.setRotationAngle(v + 180);
+                        arrowMarker.addTo(arrowmarkers);
+                    }
+                }
+            }
+        }
+    }
+    if (subset) {
+        updateSelection();
+    }
+}
+
 function fetchDataForModel(model, dt) {
     location.hash = model + "@" + dateFormat(dt);
     dt = moment(dt).format("YYYYMMDD_HHmmss");
@@ -420,84 +515,15 @@ function fetchDataForModel(model, dt) {
             }
         });
     }
-    $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, function(data) {
-        console.log(data);
+    if (subvar == "Depth") {
         map.spin(false);
-        var maxHSV = 250;
-        var details = legendranges[subvar];
-        var min = details.min;
-        var max = details.max;
-        if (subvar == "Dir") {
-            //$("#colorbar").hide();
-            //$("#compass").show();
-            map.addLayer(arrowmarkers);
-            maxHSV = 360;
-            updateLegendColors("full");
-        } else {
-            $("#colorbar").show();
-            $("#compass").hide();
-            updateLegendColors();
-        }
-        var midVal = (max + min) / 2;
-        $("#colorbar #max").val(max.toFixed(dp));
-        $("#colorbar #maxsuffix").text(details.suffix);
-        $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
-        $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
-        var n = 0;
-        var islands = ["ni", "si"];
-        for (var ii in islands) {
-            var island = islands[ii];
-            for (var i in data[island]) {
-                var row = data[island][i];
-                for (var j in row) {
-                    var v = row[j];
-                    var marker = markerLookup[island][i + "_" + j];
-                    if (!marker) continue;
-                    if (subvar == "RTpeak" || subvar == "RTm01") {
-                        if (v < 3.5) {
-                            v = null;
-                        }
-                    }
-                    if (!v) {
-                        if (island == "ni") {
-                            nimarkers.removeLayer(marker);
-                        } else {
-                            simarkers.removeLayer(marker);
-                        }
-                        continue;
-                    }
-                    marker.options.v = v;
-                    var desc = marker.options.desc + ": " + v.toFixed(dp);
-                    var normalized_v = ((v - min) / (max - min));
-                    if (normalized_v < 0) normalized_v = 0;
-                    if (normalized_v > 1) normalized_v = 1;
-                    if (subvar == "Dir") {
-                        var color = fullcolormap(normalized_v)
-                    } else {
-                        var color = colormap(normalized_v);
-                    }
-                    if (island == "ni") {
-                        marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
-                    } else {
-                        marker.setStyle({color: color}).setTooltipContent(desc).addTo(simarkers);
-                    }
-                    if (subvar == "Dir") {
-                        var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
-                        if (arrowMarker) {
-                            arrowMarker.setRotationAngle(v + 180);
-                            arrowMarker.addTo(arrowmarkers);
-                        }
-                    }
-                }
-            }
-        }
-        if (subset) {
-            updateSelection();
-        }
-    }).fail(function(e) {
-        alert("There was an error fetching data for " + model + ": " + e.status + " " + e.statusText);
-        console.error(e);
-    });
+        handleData(window.ranges.depth);
+    } else {
+        $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, handleData).fail(function(e) {
+            alert("There was an error fetching data for " + model + ": " + e.status + " " + e.statusText);
+            console.error(e);
+        });
+    }
 }
 
 var ONE_DAY_MS = 1000 * 60 * 60 * 24;
@@ -507,6 +533,7 @@ function fetchRanges() {
     $.getJSON(baseUrl + "ranges", function(data) {
         console.log(data);
         window.latlongs = data.latlongs;
+        window.ranges = data;
         var islands = ["ni", "si"];
         for (var ii in islands) {
             var island = islands[ii];
@@ -520,8 +547,8 @@ function fetchRanges() {
                     }
                     var lat = data.latlongs[island].lat[i][j];
                     var lng = data.latlongs[island].lng[i][j];
-                    //var depth = data.depth[island][i][j];
-                    //if (depth < 10) continue;
+                    var depth = data.depth[island][i][j];
+                    if (depth < 10) continue;
                     var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)/(" + i + "," + j + ")";
                     var progress = '<div class="progress">';
                     progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
