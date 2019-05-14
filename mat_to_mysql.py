@@ -196,6 +196,6 @@ def load_file(args):
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
 
 
-PROCESSES = cpu_count() / 2
+PROCESSES = cpu_count() / 4
 p = Pool(processes=PROCESSES, initializer=init)
 p.map(load_file, enumerate(files_to_process))
