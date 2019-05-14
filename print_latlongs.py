@@ -2,8 +2,8 @@
 import scipy.io
 import json
 
-nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
-simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
+nimat = scipy.io.loadmat("data/NI-980101_980630-DIR.mat")
+simat = scipy.io.loadmat("data/SI-980101_980630-DIR.mat")
 
 latlongs = {
     "ni": {

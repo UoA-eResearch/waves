@@ -1,6 +1,5 @@
 {
     "PTDIR": [
-        "Depth", 
         "DrPT01", 
         "DrPT02", 
         "DrPT03", 
@@ -16,21 +15,18 @@
         "Yp"
     ], 
     "LWAVP": [
-        "Depth", 
         "Lwavp", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "WLEN": [
-        "Depth", 
         "Time", 
         "Wlen", 
         "Xp", 
         "Yp"
     ], 
     "PTHSIGN": [
-        "Depth", 
         "HsPT01", 
         "HsPT02", 
         "HsPT03", 
@@ -46,14 +42,12 @@
         "Yp"
     ], 
     "DIR": [
-        "Depth", 
         "Dir", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "PTRTP": [
-        "Depth", 
         "Time", 
         "TpPT01", 
         "TpPT02", 
@@ -69,14 +63,12 @@
         "Yp"
     ], 
     "HSWELL": [
-        "Depth", 
         "Hswell", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "PTDSPR": [
-        "Depth", 
         "DsPT01", 
         "DsPT02", 
         "DsPT03", 
@@ -92,7 +84,6 @@
         "Yp"
     ], 
     "PTWFRAC": [
-        "Depth", 
         "Time", 
         "WfPT01", 
         "WfPT02", 
@@ -108,7 +99,6 @@
         "Yp"
     ], 
     "PTSTEEP": [
-        "Depth", 
         "StPT01", 
         "StPT02", 
         "StPT03", 
@@ -124,42 +114,36 @@
         "Yp"
     ], 
     "FSPR": [
-        "Depth", 
         "FSpr", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "RTP": [
-        "Depth", 
         "RTpeak", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "HSIGN": [
-        "Depth", 
         "Hsig", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "RTMM10": [
-        "Depth", 
         "RTm_10", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "TPS": [
-        "Depth", 
         "TPsmoo", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "PTWLEN": [
-        "Depth", 
         "Time", 
         "WlPT01", 
         "WlPT02", 
@@ -175,42 +159,36 @@
         "Yp"
     ], 
     "TM02": [
-        "Depth", 
         "Time", 
         "Tm02", 
         "Xp", 
         "Yp"
     ], 
     "QP": [
-        "Depth", 
         "Qp", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "PDIR": [
-        "Depth", 
         "PkDir", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "RTM01": [
-        "Depth", 
         "RTm01", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "DSPR": [
-        "Depth", 
         "Dspr", 
         "Time", 
         "Xp", 
         "Yp"
     ], 
     "WIND": [
-        "Depth", 
         "Time", 
         "Windv_x", 
         "Windv_y", 

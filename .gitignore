@@ -107,3 +107,4 @@ data
 exports
 .vscode
 config.py
+*.out
