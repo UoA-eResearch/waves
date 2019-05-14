@@ -326,7 +326,7 @@ function plotData(container, results) {
         ]
     };
     Plotly.newPlot(container[0], data, layout);
-    $(container).append("Mean=" + mean);
+    $(container).parent().append("<div class='mean'>Mean=" + mean + "</div>");
 }
 
 function popupHandler(popup) {

@@ -183,6 +183,11 @@ html, body,  #map{
     width: 800px;
 }
 
+.mean {
+    text-align: center;
+    padding-top: 15px;
+}
+
 ::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 7px;
