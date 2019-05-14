@@ -78,23 +78,26 @@ def main():
     dt = startDT
     results = []
     while dt <= endDT:
-        year = dt.strftime("%y") # 2 digit year
         dt_string = dt.strftime("%Y%m%d_%H%M%S")
+        ymd = dt_string.split("_")[0]
         mat = None
         for m in mat_cache:
-            if m["year"] == year and m["ftype"] == ftype:
+            if m["fstart"] <= ymd and m["fend"] >= ymd and m["ftype"] == ftype:
                 mat = m
                 break
         if not mat:
             nimat = None
             simat = None
             for f in files:
-                if f.startswith("NI-" + year) and f.endswith("-" + ftype + ".mat"):
-                    print("loading " + f)
-                    nimat = scipy.io.loadmat("data/" + f)
-                if f.startswith("SI-" + year) and f.endswith("-" + ftype + ".mat"):
-                    print("loading " + f)
-                    simat = scipy.io.loadmat("data/" + f)
+                date_range = f.split("-")[1]
+                fstart, fend = date_range.split("_")
+                if fstart <= ymd and fend >= ymd and f.endswith("-" + ftype + ".mat"):
+                    if f.startswith("NI-"):
+                        print("loading " + f)
+                        nimat = scipy.io.loadmat("data/" + f)
+                    if f.startswith("SI-"):
+                        print("loading " + f)
+                        simat = scipy.io.loadmat("data/" + f)
             current_memory_usage_pct = psutil.virtual_memory().percent
             if current_memory_usage_pct > MAX_MEMORY_PCT:
                 print("Memory usage {}% is over {}%! Popping {}-{} from cache".format(
@@ -104,7 +107,8 @@ def main():
             if not nimat or not simat:
                 abort(500, "Mat for {}_{}_{} not found!".format(ftype, var, dt_string))
             mat = {
-                "year": year,
+                "fstart": fstart,
+                "fend": fend,
                 "ftype": ftype,
                 "nimat": nimat,
                 "simat": simat
