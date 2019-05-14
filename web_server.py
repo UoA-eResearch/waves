@@ -78,16 +78,19 @@ def main():
     dt = startDT
     results = []
     while dt <= endDT:
+        nimat = None
+        simat = None
         dt_string = dt.strftime("%Y%m%d_%H%M%S")
         ymd = dt.strftime("%y%m%d") # 2 digit year
-        mat = None
         for m in mat_cache:
             if m["fstart"] <= ymd and m["fend"] >= ymd and m["ftype"] == ftype:
-                mat = m
+                if m["island"] == "NI":
+                    nimat = m["mat"]
+                elif m["island"] == "SI":
+                    simat = m["mat"]
+            if nimat and simat:
                 break
-        if not mat:
-            nimat = None
-            simat = None
+        if not nimat or not simat:
             for f in files:
                 date_range = f.split("-")[1]
                 fstart, fend = date_range.split("_")
@@ -95,28 +98,36 @@ def main():
                     if f.startswith("NI-"):
                         print("loading " + f)
                         nimat = scipy.io.loadmat("data/" + f)
+                        mat = {
+                            "fstart": fstart,
+                            "fend": fend,
+                            "ftype": ftype,
+                            "island": "NI",
+                            "mat": nimat
+                        }
+                        mat_cache.insert(0, mat)
                     if f.startswith("SI-"):
                         print("loading " + f)
                         simat = scipy.io.loadmat("data/" + f)
+                        mat = {
+                            "fstart": fstart,
+                            "fend": fend,
+                            "ftype": ftype,
+                            "island": "SI",
+                            "mat": simat
+                        }
+                        mat_cache.insert(0, mat)
             current_memory_usage_pct = psutil.virtual_memory().percent
             if current_memory_usage_pct > MAX_MEMORY_PCT:
                 print("Memory usage {}% is over {}%! Popping {}-{} from cache".format(
-                    current_memory_usage_pct, MAX_MEMORY_PCT, mat_cache[-1]["year"], mat_cache[-1]["ftype"]
+                    current_memory_usage_pct, MAX_MEMORY_PCT, mat_cache[-1]["fstart"], mat_cache[-1]["ftype"]
                 ))
                 mat_cache.pop()
-            if not nimat or not simat:
+            if not mat:
                 abort(500, "Mat for {}_{}_{} not found!".format(ftype, var, dt_string))
-            mat = {
-                "fstart": fstart,
-                "fend": fend,
-                "ftype": ftype,
-                "nimat": nimat,
-                "simat": simat
-            }
-            mat_cache.insert(0, mat)
         key = "{}_{}".format(var, dt_string)
-        nimat = mat["nimat"][key]
-        simat = mat["simat"][key]
+        nimat = nimat[key]
+        simat = simat[key]
         if nimask != None and simask != None:
             nimask_list = json.loads(nimask)
             for pair in nimask_list:
