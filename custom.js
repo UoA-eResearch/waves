@@ -330,7 +330,10 @@ function plotData(container, results) {
         ]
     };
     Plotly.newPlot(container[0], data, layout);
-    $(container).parent().append("<div class='mean'>Mean=" + mean + "</div>");
+
+    var details = legendranges[subvar];
+    var meanS = Math.round(mean * 10) / 10 + details.suffix;
+    $(container).parent().append("<div class='mean'>Mean=" + meanS + "</div>");
 }
 
 function popupHandler(popup) {
