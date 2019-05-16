@@ -585,7 +585,7 @@ function fetchRanges() {
         start = moment(start, "YYMMDD");
         var end = data.date_ranges[data.date_ranges.length - 1];
         end = end.split("_")[1];
-        end = moment(end, "YYMMDD").hour(23);
+        end = moment(end, "YYMMDD").hour(21);
         dataset.update({id: 1, start: start, end: end});
         var ct = timeline.getCustomTime(1);
         console.log(start, end, ct);
@@ -853,9 +853,11 @@ $("#current").change(function() {
     var bounds = dataset.get(1);
     var newTime = new Date(this.value);
     if (newTime == "Invalid Date") return;
-    if (newTime < bounds.start) return;
+    if (newTime.getFullYear() < 1000) return; // user typing year
+    if (newTime < bounds.start) newTime = new Date(bounds.start);
     if (newTime > bounds.end) newTime = new Date(bounds.end);
     newTime = snapDate(newTime);
+    $("#current").val(moment(newTime).format("YYYY-MM-DDTHH:mm"));
     timeline.setCustomTime(newTime, 1);
     fetchDataForModel(window.model, newTime);
 })
@@ -913,6 +915,12 @@ timeline.on("select", function() {
 
 timeline.on('timechanged', function(e) {
     var dt = snapDate(e.time);
+    var bounds = dataset.get(1);
+    if (dt < bounds.start) {
+        dt = bounds.start;
+    } else if (dt > bounds.end) {
+        dt = bounds.end;
+    }
     timeline.setCustomTime(dt, 1);
     var dateString = dateFormat(dt);
     $("#current").val(moment(dt).format("YYYY-MM-DDTHH:mm"));
