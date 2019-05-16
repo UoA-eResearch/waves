@@ -290,6 +290,8 @@ function unpack(rows, key) {
 var chartProgressInterval;
 
 function plotData(container, results) {
+    var details = legendranges[subvar];
+    var title = subvar + "(" + details.suffix + ")";
     var d3 = Plotly.d3
     var dts = unpack(results, 'datetime')
     for (var i in dts) {
@@ -298,40 +300,38 @@ function plotData(container, results) {
     console.log(dts)
     var values = unpack(results, 'value')
     var mean = d3.mean(values)
+    var means = [];
+    for (i in dts) {
+        means.push(mean);
+    }
     var data = [{
         type: "scatter",
         mode: "lines",
-        name: window.model,
+        name: title,
         x: dts,
         y: values,
         line: {color: '#17BECF'}
+    },
+    {
+        type: "scatter",
+        mode: "lines",
+        name: "mean",
+        x: dts,
+        y: means,
+        line: {color: "red"}
     }];
     var layout = {
-        title: window.model,
+        title: title + " over time",
         xaxis: {
             title: "Date/Time"
         },
         yaxis: {
-            title: window.model
-        },
-        shapes: [
-            {
-                type: 'line',
-                x0: d3.min(dts),
-                y0: mean,
-                x1: d3.max(dts),
-                y1: mean,
-                line: {
-                    color: 'red',
-                    width: 4,
-                    dash: 'dashdot'
-                }
-            },
-        ]
+            title: title,
+            hoverformat: '.1f'
+        }
     };
     Plotly.newPlot(container[0], data, layout);
 
-    var details = legendranges[subvar];
     var meanS = Math.round(mean * 10) / 10 + details.suffix;
     $(container).parent().append("<div class='mean'>Mean=" + meanS + "</div>");
 }
