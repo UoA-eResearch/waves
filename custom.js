@@ -191,8 +191,8 @@ var whitelabels = L.tileLayer.provider("Stamen.TonerLabels", {
 
 var overlays = {
     "Selections": drawnItems,
-    "NI markers": nimarkers,
-    "SI markers": simarkers,
+    //"NI markers": nimarkers,
+    //"SI markers": simarkers,
     "Arrows": arrowmarkers,
     "City labels": labels,
     "City labels (white)": whitelabels,
@@ -769,7 +769,7 @@ var container = document.getElementById('timeline');
 
 var dataset = new vis.DataSet([
     {id: 1, content: 'Data range', start: new Date(1871, 0, 1, 12), end: new Date(2100, 0, 1, 12), editable: false, selectable: false},
-    {id: 2, content: 'Timeseries export range', start: new Date(1871, 0, 1, 12), end: new Date(1900, 0, 1, 12), editable: {updateTime: true, remove: false}, style: "display: none"}
+    {id: 2, content: 'On-click display range', start: new Date(1871, 0, 1, 12), end: new Date(1900, 0, 1, 12), editable: {updateTime: true, remove: false}}
 ]);
 
 dataset.on('update', function (event, properties) {
@@ -843,7 +843,8 @@ $("#start").change(function() {
     var bounds = dataset.get(1);
     var start = new Date(this.value);
     if (start == "Invalid Date") return;
-    if (start < bounds.start) return;
+    if (start.getFullYear() < 1000) return; // user typing year
+    if (start < bounds.start) start = new Date(bounds.start);
     if (start > bounds.end - ONE_DAY_MS) start = new Date(bounds.end - ONE_DAY_MS);
     dataset.update({id: 2, start: start, end: dataset.get(2).end});
     updateSelectedDays();
@@ -856,8 +857,8 @@ $("#current").change(function() {
     if (newTime.getFullYear() < 1000) return; // user typing year
     if (newTime < bounds.start) newTime = new Date(bounds.start);
     if (newTime > bounds.end) newTime = new Date(bounds.end);
-    newTime = snapDate(newTime);
     $("#current").val(moment(newTime).format("YYYY-MM-DDTHH:mm"));
+    newTime = snapDate(newTime);
     timeline.setCustomTime(newTime, 1);
     fetchDataForModel(window.model, newTime);
 })
@@ -866,8 +867,9 @@ $("#end").change(function() {
     var bounds = dataset.get(1);
     var end = new Date(this.value);
     if (end == "Invalid Date") return;
-    if (end > bounds.end) end = bounds.end;
-    if (end < bounds.start) return;
+    if (end.getFullYear() < 1000) return; // user typing year
+    if (end < bounds.start) end = new Date(bounds.start);
+    if (end > bounds.end) end = new Date(bounds.end);
     dataset.update({id: 2, start: dataset.get(2).start, end: end});
     updateSelectedDays();
 });
@@ -888,20 +890,21 @@ var options = {
         remove: false,
         overrideItems: false
     },
-    snap: snapDate,/*
+    snap: snapDate,
     onMoving: function (item, callback) {
         console.log(item, callback);
         var bounds = dataset.get(1);
+
         if (item.start > item.end - ONE_DAY_MS) item.start = new Date(item.end - ONE_DAY_MS);
         if (item.end.getTime() < item.start.getTime() + ONE_DAY_MS) item.end = new Date(item.start.getTime() + ONE_DAY_MS);
         if (item.start < bounds.start) item.start = bounds.start;
         if (item.start > bounds.end - ONE_DAY_MS) item.start = new Date(bounds.end - ONE_DAY_MS);
-        if (item.end < bounds.start.getTime() + ONE_DAY_MS) item.end = new Date(bounds.start.getTime() + ONE_DAY_MS);
+        if (item.end < bounds.start + ONE_DAY_MS) item.end = new Date(bounds.start + ONE_DAY_MS);
         if (item.end > bounds.end) item.end = bounds.end;
         dataset.update({id: 2, start: item.start, end: item.end});
 
         callback(item); // send back the (possibly) changed item
-    },*/
+    },
 };
 
 // Create a Timeline
@@ -994,10 +997,12 @@ fetchRanges();
 
 $('#vis-tab').on('shown.bs.tab', function (e) {
     console.log("vis");
-    dataset.update({id: 2, style:"display:none"});
+    dataset.update({id: 2, content:"On-click display range"});
 })
 
 $('#export-tab').on('shown.bs.tab', function (e) {
     console.log("export");
-    dataset.update({id: 2, style:"display:block"});
+    dataset.update({id: 2, content:"Timeseries export range"});
+    $("#download_info #start").val(moment(dataset.get(2).start).format("YYYY-MM-DDTHH:mm"));
+    $("#download_info #end").val(moment(dataset.get(2).end).format("YYYY-MM-DDTHH:mm"));
 })
