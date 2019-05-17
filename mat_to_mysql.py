@@ -8,9 +8,13 @@ import numpy as np
 import mysql.connector
 import config
 from multiprocessing import Pool, cpu_count
+import json
 
 files_to_process = sys.argv[1:]
 times = pd.date_range("1993-01-01", "2013-01-01", freq="3H")
+
+with open("depth.json") as f:
+    depth = json.load(f)
 
 def init():
     global db, cur
@@ -61,8 +65,8 @@ if "ll" in files_to_process:
     cur.execute(sql)
     db.commit()
 
-    nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
-    simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
+    nimat = scipy.io.loadmat("data/NI-990701_991231-RTP.mat")
+    simat = scipy.io.loadmat("data/SI-990701_991231-RTP.mat")
 
     nishape = nimat["Yp"].shape
     sishape = simat["Yp"].shape
@@ -178,6 +182,14 @@ def load_file(args):
         dateStr = date.strftime("%Y%m%d_%H%M%S")
         for i in range(shape[0]):
             for j in range(shape[1]):
+                if depth[island][i][j] < 10:
+                    continue
+                if island == "SI" and (j > 117 or i > 99):
+                    continue
+                if island == "NI" and (j < 6 or i < 4):
+                    continue
+                if island == "SI" and (i > 57 and j > 56):
+                    continue
                 thisRow = [island, i, j, t]
                 for var in unique_keys:
                     key = var + "_" + dateStr
@@ -185,7 +197,8 @@ def load_file(args):
                     if np.isnan(val):
                         val = None
                     thisRow.append(val)
-                values.append(thisRow)
+                if any(values[4:]):
+                    values.append(thisRow)
 
     log("values prepared, commencing executemany")
     del mat
