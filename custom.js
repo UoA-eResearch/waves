@@ -548,7 +548,9 @@ function fetchRanges() {
             for (var i in data.latlongs[island].lat) {
                 var row = data.latlongs[island].lat[i];
                 for (var j in row) {
-                    if (island == "si" && (j > 117 | i > 99)) {
+                    if (island == "si" && (j > 117 || i > 99)) {
+                        continue;
+                    } else if (island == "si" && (i > 57 && j > 56)) {
                         continue;
                     } else if (island == "ni" && (j < 6 || i < 4)) {
                         continue;
