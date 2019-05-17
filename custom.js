@@ -441,6 +441,7 @@ function handleData(data) {
         updateLegendColors();
     }
     var midVal = (max + min) / 2;
+    dp = 1;
     $("#colorbar #max").val(max.toFixed(dp));
     $("#colorbar #maxsuffix").text(details.suffix);
     $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
