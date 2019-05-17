@@ -591,6 +591,7 @@ function fetchRanges() {
         console.log(start, end, ct);
         if (ct < start || ct > end) {
             timeline.setCustomTime(start, 1);
+            $("#current").val(moment(start).format("YYYY-MM-DDTHH:mm"));
             timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateFormat(start), 1);
         }
         timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"));
@@ -842,7 +843,7 @@ function updateSelectedDays() {
 $("#start").change(function() {
     var bounds = dataset.get(1);
     var start = new Date(this.value);
-    if (start == "Invalid Date") return;
+    if (start == "Invalid Date") start = new Date(bounds.start);
     if (start.getFullYear() < 1000) return; // user typing year
     if (start < bounds.start) start = new Date(bounds.start);
     if (start > bounds.end - ONE_DAY_MS) start = new Date(bounds.end - ONE_DAY_MS);
@@ -853,7 +854,7 @@ $("#start").change(function() {
 $("#current").change(function() {
     var bounds = dataset.get(1);
     var newTime = new Date(this.value);
-    if (newTime == "Invalid Date") return;
+    if (newTime == "Invalid Date") newTime = new Date(bounds.start);
     if (newTime.getFullYear() < 1000) return; // user typing year
     if (newTime < bounds.start) newTime = new Date(bounds.start);
     if (newTime > bounds.end) newTime = new Date(bounds.end);
@@ -866,7 +867,7 @@ $("#current").change(function() {
 $("#end").change(function() {
     var bounds = dataset.get(1);
     var end = new Date(this.value);
-    if (end == "Invalid Date") return;
+    if (end == "Invalid Date") end = new Date(bounds.start);
     if (end.getFullYear() < 1000) return; // user typing year
     if (end < bounds.start) end = new Date(bounds.start);
     if (end > bounds.end) end = new Date(bounds.end);
