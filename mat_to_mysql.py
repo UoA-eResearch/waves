@@ -182,7 +182,7 @@ def load_file(args):
         dateStr = date.strftime("%Y%m%d_%H%M%S")
         for i in range(shape[0]):
             for j in range(shape[1]):
-                if depth[island][i][j] < 10:
+                if depth[island.lower()][i][j] < 10:
                     continue
                 if island == "SI" and (j > 117 or i > 99):
                     continue
