@@ -197,10 +197,10 @@ def load_file(args):
                     if np.isnan(val):
                         val = None
                     thisRow.append(val)
-                if any(values[4:]):
+                if any(thisRow[4:]):
                     values.append(thisRow)
 
-    log("values prepared, commencing executemany")
+    log("{} values prepared, commencing executemany".format(len(values)))
     del mat
     cur.executemany(sql, values)
     del values
