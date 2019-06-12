@@ -196,6 +196,8 @@ def load_file(args):
                     val = float(mat[key][i][j])
                     if np.isnan(val):
                         val = None
+                    if val == float('inf'):
+                        val = 9999
                     thisRow.append(val)
                 if any(thisRow[4:]):
                     values.append(thisRow)
