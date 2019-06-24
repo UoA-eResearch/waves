@@ -86,8 +86,11 @@ def writeCSV(filename, results):
 def get(db):
     s = time.time()
     params = getParamsOrDefaults(request.params)
-    fromwhere = getQueryForParams(params)
-    query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
+    if params["ftype"] == "DEPTH":
+        query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH m INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong)"
+    else:
+        fromwhere = getQueryForParams(params)
+        query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
     print(query)
     db.execute(query)
     print("{}s - query executed".format(time.time() - s))
