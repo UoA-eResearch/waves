@@ -90,16 +90,16 @@ if "depth" in files_to_process:
     files_to_process.remove("depth")
     init()
 
-    sql = """CREATE TABLE IF NOT EXISTS `depth` (
+    sql = """CREATE TABLE IF NOT EXISTS `DEPTH` (
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
-                `depth` double NULL,
+                `Depth` double NULL,
                 PRIMARY KEY (`island`,`x`,`y`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
     cur.execute(sql)
     db.commit()
-    sql = "REPLACE INTO depth (island, x, y, depth) VALUES (%s, %s, %s, %s)"
+    sql = "REPLACE INTO DEPTH (island, x, y, Depth) VALUES (%s, %s, %s, %s)"
     values = []
     for island in depth:
         for i in range(len(depth[island])):
