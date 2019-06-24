@@ -87,7 +87,7 @@ def get(db):
     s = time.time()
     params = getParamsOrDefaults(request.params)
     fromwhere = getQueryForParams(params)
-    query = "SELECT ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
+    query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
     print(query)
     db.execute(query)
     print("{}s - query executed".format(time.time() - s))
