@@ -94,28 +94,18 @@ if "depth" in files_to_process:
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
-                `depth` double NOT NULL,
+                `depth` double NULL,
                 PRIMARY KEY (`island`,`x`,`y`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
     cur.execute(sql)
     db.commit()
-    nimat = scipy.io.loadmat("data/NI-930101_931231-PDIR.mat")
-    simat = scipy.io.loadmat("data/SI-930101_931231-PDIR.mat")
-
-    nishape = nimat["Yp"].shape
-    sishape = simat["Yp"].shape
     sql = "REPLACE INTO depth (island, x, y, depth) VALUES (%s, %s, %s, %s)"
     values = []
-    for i in range(nishape[0]):
-        for j in range(nishape[1]):
-            depth = nimat["Depth_19930101_000000"][i][j]
-            if not np.isnan(depth):
-                values.append(("NI", i, j, float(depth)))
-    for i in range(sishape[0]):
-        for j in range(sishape[1]):
-            depth = simat["Depth_19930101_000000"][i][j]
-            if not np.isnan(depth):
-                values.append(("SI", i, j, float(depth)))
+    for island in depth:
+        for i in range(len(depth[island])):
+            for j in range(len(depth[island][i])):
+                d = depth[island][i][j]
+                values.append((island, i, j, d))
     cur.executemany(sql, values)
     db.commit()
     log("depth table built. {} rows inserted".format(cur.rowcount))
