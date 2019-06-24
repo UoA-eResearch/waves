@@ -41,7 +41,7 @@ def getParamsOrDefaults(params):
     return params
 
 def getQueryForParams(params):
-    fromwhere = " FROM `" + params['ftype'] + "` m INNER JOIN `latlong` l ON m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id "
+    fromwhere = " FROM `" + params['ftype'] + "` m INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id "
     fromwhere += "WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND d.datetime BETWEEN '" + params['minDate'] + "' AND '" + params['maxDate'] + "'"
     return fromwhere
 
