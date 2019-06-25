@@ -875,7 +875,7 @@ if (location.hash.length > 1) {
     $("#model").val(model);
     timeline.addCustomTime(bits[1], 1);
 } else {
-    timeline.addCustomTime("1993-01-01", 1);
+    timeline.addCustomTime("1993-01-01 00:00", 1);
 }
 window.model = model;
 var dateString = timeline.getCustomTime(1);
