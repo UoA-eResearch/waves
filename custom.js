@@ -323,7 +323,6 @@ function popupHandler(popup) {
         bounds: bounds
     }
     var container = $("#graph", popup.popup._contentNode);
-/*
     try {
         var ws = new WebSocket(wsUrl);
         ws.onopen = function() {
@@ -344,7 +343,6 @@ function popupHandler(popup) {
             }
         };
     } catch(err) {
-        */
         var start = new Date();
         var days = $('#selected_days').text();
         var est_time_instance = Math.round(days * rows_per_sec);
@@ -363,7 +361,7 @@ function popupHandler(popup) {
             container.text("");
             plotData(container, data.results);
         });
-    //}
+    }
 }
 
 var baseUrl = "https://wave.storm-surge.cloud.edu.au/wave_mysql/"
