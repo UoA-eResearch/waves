@@ -82,51 +82,29 @@ map.addControl(drawControl);
 
 $("#download_info #control").append($(".leaflet-draw"));
 
-var nimarkers = L.layerGroup().addTo(map);
-var simarkers = L.layerGroup().addTo(map);
+var markers = L.layerGroup().addTo(map);
 var arrowmarkers = L.layerGroup();
 
 function updateSelection() {
     if (!subset) return;
-    window.nimask = [];
-    window.simask = [];
     var count = 0;
-    /*
     if (subset.layerType == "circle") {
         var center = subset.getLatLng();
         var radius = subset.getRadius();
-        nimarkers.eachLayer(function(marker) {
+        markers.eachLayer(function(marker) {
             var markerll = marker.getLatLng();
             var dist = markerll.distanceTo(center);
             if (dist <= radius) {
                 count++;
             }
         });
-        simarkers.eachLayer(function(marker) {
-            var markerll = marker.getLatLng();
-            var dist = markerll.distanceTo(center);
-            if (dist <= radius) {
-                count++;
-            }
-        });
-    } else { */
-        nimarkers.eachLayer(function(marker) {
+    } else {
+        markers.eachLayer(function(marker) {
             if (subset.contains(marker.getLatLng())) {
                 count++;
-                var x = parseInt(marker.options.i);
-                var y = parseInt(marker.options.j);
-                window.nimask.push([x,y]);
             }
         });
-        simarkers.eachLayer(function(marker) {
-            if (subset.contains(marker.getLatLng())) {
-                count++;
-                var x = parseInt(marker.options.i);
-                var y = parseInt(marker.options.j);
-                window.simask.push([x,y]);
-            }
-        });
-    //}
+    }
     console.log(count + " points in ", subset);
     $("#selected_points").text(count);
     updateTotalRows();
@@ -191,8 +169,7 @@ var whitelabels = L.tileLayer.provider("Stamen.TonerLabels", {
 
 var overlays = {
     "Selections": drawnItems,
-    //"NI markers": nimarkers,
-    //"SI markers": simarkers,
+    "Markers": markers,
     "Arrows": arrowmarkers,
     "City labels": labels,
     "City labels (white)": whitelabels,
@@ -266,19 +243,16 @@ $("#max").change(function() {
     var midVal = (details.max + details.min) / 2;
     $("#mid").text(midVal.toFixed(dp) + details.suffix);
     var islands = ["ni", "si"];
-    for (var ii in islands) {
-        var island = islands[ii];
-        for (var key in markerLookup[island]) {
-            var marker = markerLookup[island][key];
-            var o = marker.options;
-            var normalized_v = ((o.v - details.min) / (details.max - details.min));
-            if (subvar == "Dir") {
-                var color = fullcolormap(normalized_v)
-            } else {
-                var color = colormap(normalized_v);
-            }
-            marker.setStyle({color: color});
+    for (var i in markers) {
+        var marker = markers[i];
+        var o = marker.options;
+        var normalized_v = ((o.v - details.min) / (details.max - details.min));
+        if (subvar == "Dir") {
+            var color = fullcolormap(normalized_v)
+        } else {
+            var color = colormap(normalized_v);
         }
+        marker.setStyle({color: color});
     }
 })
 updateLegendColors();
@@ -294,11 +268,7 @@ function plotData(container, results) {
     var title = subvar + "(" + details.suffix + ")";
     var d3 = Plotly.d3
     var dts = unpack(results, 'datetime')
-    for (var i in dts) {
-        dts[i] = moment(dts[i], "YYYYMMDD_HHmmss").format("YYYY-MM-DD HH:mm:ss");
-    }
-    console.log(dts)
-    var values = unpack(results, 'value')
+    var values = unpack(results, subvar)
     var mean = d3.mean(values)
     var means = [];
     for (i in dts) {
@@ -339,26 +309,18 @@ function plotData(container, results) {
 function popupHandler(popup) {
     console.log(popup);
     var dt = dataset.get(2);
-    var x = parseInt(popup.target.options.i);
-    var y = parseInt(popup.target.options.j);
-    var island = popup.target.options.island;
+    var bounds = Terraformer.WKT.convert(popup.target.toGeoJSON().geometry);
 
     var bits = window.model.split("-");
     var ftype = bits[0];
     var subvar = bits[1];
 
     var payload = {
-        start: moment(dt.start).format("YYYYMMDD_HHmmss"),
-        end: moment(dt.end).format("YYYYMMDD_HHmmss"),
-        file: ftype,
+        minDate: dateFormat(dt.start),
+        maxDate: dateFormat(dt.end),
+        ftype: ftype,
         var: subvar,
-    }
-    if (island == "ni") {
-        payload.nimask = JSON.stringify([[x,y]]);
-        payload.simask = JSON.stringify([]);
-    } else {
-        payload.nimask = JSON.stringify([]);
-        payload.simask = JSON.stringify([[x,y]]);
+        bounds: bounds
     }
     var container = $("#graph", popup.popup._contentNode);
 /*
@@ -404,16 +366,10 @@ function popupHandler(popup) {
     //}
 }
 
-var baseUrl = "https://wave.storm-surge.cloud.edu.au/wave/"
-var wsUrl = "wss://stormsurge.nectar.auckland.ac.nz/storm/websocket";
-var markerLookup = {
-    "ni": {},
-    "si": {}
-};
-var arrowMarkerLookup = {
-    "ni": {},
-    "si": {}
-}
+var baseUrl = "https://wave.storm-surge.cloud.edu.au/wave_mysql/"
+var wsUrl = "wss://wave.storm-surge.cloud.edu.au/wave_mysql/websocket";
+var markerLookup = {}
+var arrowMarkerLookup = {}
 
 var dp = 4;
 
@@ -447,50 +403,50 @@ function handleData(data) {
     $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
     $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
     var n = 0;
-    var islands = ["ni", "si"];
-    for (var ii in islands) {
-        var island = islands[ii];
-        for (var i in data[island]) {
-            var row = data[island][i];
-            for (var j in row) {
-                var v = row[j];
-                var marker = markerLookup[island][i + "_" + j];
-                if (!marker) continue;
-                if (subvar == "RTpeak" || subvar == "RTm01") {
-                    if (v < 3.5) {
-                        v = null;
-                    }
+    console.log(data);
+    if (window.lastvar == "Depth") {
+        markers.clearLayers();
+    }
+    window.lastvar = subvar;
+    for (var i in data.results) {
+        var d = data.results[i];
+        var v = d[subvar];
+        var desc = "(" + d.lat.toFixed(dp) + "°," + d.lng.toFixed(dp) + "°)=" + v.toFixed(dp);
+        var normalized_v = ((v - min) / (max - min));
+        if (normalized_v < 0) normalized_v = 0;
+        if (normalized_v > 1) normalized_v = 1;
+        if (subvar == "Dir") {
+            var color = fullcolormap(normalized_v)
+        } else {
+            var color = colormap(normalized_v);
+        }
+        var marker = markerLookup[d.lat + "_" + d.lng];
+        if (!marker) {
+            var options = {radius: 2000, color: color, fillOpacity: 1};
+            var marker = L.circle([d.lat, d.lng], options);
+            var progress = '<div class="progress">';
+            progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
+            progress += '</div></div><h6>Loading...</h6>'
+            var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
+            marker.bindTooltip(desc).addTo(markers).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
+            markerLookup[d.lat + "_" + d.lng] = marker;
+        } else {
+            marker.setStyle({color: color}).setTooltipContent(desc);
+        }
+        marker.addTo(markers);
+        if (subvar == "Dir") {
+            if (d.x % 5 == 0 && d.y % 5 == 0) {
+                var arrowMarker = arrowMarkerLookup[d.lat + "_" + d.lng];
+                if (!arrowMarker) {
+                    var arrowMarker = new L.marker([d.lat, d.lng],{
+                        icon: arrowIcon,
+                        rotationOrigin: "center center",
+                        interactive: false,
+                    });
+                    arrowMarker.addTo(arrowmarkers);
+                    arrowMarkerLookup[d.lat + "_" + d.lng] = arrowMarker;
                 }
-                if (!v) {
-                    if (island == "ni") {
-                        nimarkers.removeLayer(marker);
-                    } else {
-                        simarkers.removeLayer(marker);
-                    }
-                    continue;
-                }
-                marker.options.v = v;
-                var desc = marker.options.desc + ": " + v.toFixed(dp);
-                var normalized_v = ((v - min) / (max - min));
-                if (normalized_v < 0) normalized_v = 0;
-                if (normalized_v > 1) normalized_v = 1;
-                if (subvar == "Dir") {
-                    var color = fullcolormap(normalized_v)
-                } else {
-                    var color = colormap(normalized_v);
-                }
-                if (island == "ni") {
-                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(nimarkers);
-                } else {
-                    marker.setStyle({color: color}).setTooltipContent(desc).addTo(simarkers);
-                }
-                if (subvar == "Dir") {
-                    var arrowMarker = arrowMarkerLookup[island][i + "_" + j];
-                    if (arrowMarker) {
-                        arrowMarker.setRotationAngle(v + 180);
-                        arrowMarker.addTo(arrowmarkers);
-                    }
-                }
+                arrowMarker.setRotationAngle(d.Dir + 180);
             }
         }
     }
@@ -501,7 +457,7 @@ function handleData(data) {
 
 function fetchDataForModel(model, dt) {
     location.hash = model + "@" + dateFormat(dt);
-    dt = moment(dt).format("YYYYMMDD_HHmmss");
+    dt = moment(dt).format("YYYY-MM-DD HH:mm:ss");
     console.log("fetching", baseUrl, model, dt);
     var bits = model.split("-");
     var ftype = bits[0];
@@ -509,107 +465,34 @@ function fetchDataForModel(model, dt) {
     window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
-        $.getJSON(baseUrl, { file: "DIR", var: "Dir", start: dt, end: dt }, function(data) {
-            var islands = ["ni", "si"];
-            for (var ii in islands) {
-                var island = islands[ii];
-                for (var key in arrowMarkerLookup[island]) {
-                    var arrowMarker = arrowMarkerLookup[island][key];
-                    var o = arrowMarker.options;
-                    var v = data[island][o.i][o.j];
-                    arrowMarker.setRotationAngle(v + 180);
-                    arrowMarker.addTo(arrowmarkers);
+        $.getJSON(baseUrl, { ftype: "DIR", var: "Dir", minDate: dt, maxDate: dt }, function(data) {
+            for (var i in data.results) {
+                var v = data.results[i];
+                if (v.x % 5 == 0 && v.y % 5 == 0) {
+                    var arrowMarker = arrowMarkerLookup[v.lat + "_" + v.lng];
+                    if (!arrowMarker) {
+                        var arrowMarker = new L.marker([v.lat, v.lng],{
+                            icon: arrowIcon,
+                            rotationOrigin: "center center",
+                            interactive: false,
+                        });
+                        arrowMarker.addTo(arrowmarkers);
+                        arrowMarkerLookup[v.lat + "_" + v.lng] = arrowMarker;
+                    }
+                    arrowMarker.setRotationAngle(v.Dir + 180);
                 }
             }
         });
     }
-    if (subvar == "Depth") {
-        map.spin(false);
-        handleData(window.ranges.depth);
-    } else {
-        $.getJSON(baseUrl, { file: ftype, var: subvar, start: dt, end: dt }, handleData).fail(function(e) {
-            alert("There was an error fetching data for " + model + ": " + e.status + " " + e.statusText);
-            console.error(e);
-        });
-    }
+    $.getJSON(baseUrl, { ftype: ftype, var: subvar, minDate: dt, maxDate: dt }, handleData).fail(function(e) {
+        alert("There was an error fetching data for " + model + ": " + e.status + " " + e.statusText);
+        console.error(e);
+    });
 }
 
 var ONE_DAY_MS = 1000 * 60 * 60 * 24;
 var ONE_YEAR_MS = ONE_DAY_MS * 365;
 
-function fetchRanges() {
-    $.getJSON(baseUrl + "ranges", function(data) {
-        console.log(data);
-        window.latlongs = data.latlongs;
-        window.ranges = data;
-        var islands = ["ni", "si"];
-        for (var ii in islands) {
-            var island = islands[ii];
-            for (var i in data.latlongs[island].lat) {
-                var row = data.latlongs[island].lat[i];
-                for (var j in row) {
-                    if (island == "si" && (j > 117 || i > 99)) {
-                        continue;
-                    } else if (island == "si" && (i > 57 && j > 56)) {
-                        continue;
-                    } else if (island == "ni" && (j < 6 || i < 4)) {
-                        continue;
-                    }
-                    var lat = data.latlongs[island].lat[i][j];
-                    var lng = data.latlongs[island].lng[i][j];
-                    var depth = data.depth[island][i][j];
-                    if (depth < 10) continue;
-                    var desc = island.toUpperCase() + ":(" + lat.toFixed(dp) + "°," + lng.toFixed(dp) + "°)/(" + i + "," + j + ")";
-                    var progress = '<div class="progress">';
-                    progress += '<div id="chartprogress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">';
-                    progress += '</div></div><h6>Loading...</h6>'
-                    var popup = '<h4>' + desc + '</h4><div id="graph">' + progress + '</div>';
-                    var options = {radius: 2000, color:"black", fillOpacity: 1, island: island, i: i, j: j, desc: desc};
-                    var marker = L.circle([lat, lng], options);
-
-                    marker.bindTooltip(desc).bindPopup(popup, {minWidth: 800, autoPanPadding: [400, 100]}).on("popupopen", popupHandler);
-                    markerLookup[island][i + "_" + j] = marker;
-                    if (i % 5 == 0 && j % 5 == 0) {
-                        var arrowMarker = new L.marker([lat, lng],{
-                            icon: arrowIcon,
-                            rotationOrigin: "center center",
-                            interactive: false,
-                            i: i,
-                            j: j,
-                            island: island
-                        });
-                        arrowMarkerLookup[island][i + "_" + j] = arrowMarker;
-                    }
-                }
-            }
-        }
-        $("#model").val(window.model);
-        var start = data.date_ranges[0].split("_")[0];
-        start = moment(start, "YYMMDD");
-        var end = data.date_ranges[data.date_ranges.length - 1];
-        end = end.split("_")[1];
-        end = moment(end, "YYMMDD").hour(21);
-        dataset.update({id: 1, start: start, end: end});
-        var ct = timeline.getCustomTime(1);
-        console.log(start, end, ct);
-        if (ct < start || ct > end) {
-            timeline.setCustomTime(start, 1);
-            $("#current").val(moment(start).format("YYYY-MM-DDTHH:mm"));
-            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateFormat(start), 1);
-        }
-        timeline.setWindow(start.clone().subtract(1, "year"), end.clone().add(1, "year"));
-        var dateRange = dataset.get(2);
-        if (dateRange.start < start || dateRange.end > end) {
-            dataset.update({id: 2, start: start, end: start.clone().add(5, "months")});
-        }
-        var dateString = dateFormat(timeline.getCustomTime(1));
-        console.log(window.model);
-        fetchDataForModel(window.model, dateString);
-    }).fail(function(e) {
-        alert("There was an error fetching data ranges " + ": " + e.status + " " + e.statusText);
-        console.error(e);
-    });
-}
 
 $("#model").change(function(e) {
     window.model = this.value;
@@ -772,8 +655,8 @@ function snapDate(date) {
 var container = document.getElementById('timeline');
 
 var dataset = new vis.DataSet([
-    {id: 1, content: 'Data range', start: new Date(1871, 0, 1, 12), end: new Date(2100, 0, 1, 12), editable: false, selectable: false},
-    {id: 2, content: 'On-click display range', start: new Date(1871, 0, 1, 12), end: new Date(1900, 0, 1, 12), editable: {updateTime: true, remove: false}}
+    {id: 1, content: 'Data range', start: new Date(1993, 0, 1, 0), end: new Date(2013, 0, 1, 0), editable: false, selectable: false},
+    {id: 2, content: 'On-click display range', start: new Date(1993, 0, 1, 0), end: new Date(1994, 0, 1, 0), editable: {updateTime: true, remove: false}}
 ]);
 
 dataset.on('update', function (event, properties) {
@@ -975,7 +858,7 @@ $("#play").click(function() {
             $("#current").val(moment(newTime).format("YYYY-MM-DDTHH:mm"));
             timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
             fetchDataForModel(window.model, dateString);
-        }, 1000);
+        }, 2000);
     } else {
         $("#play i").attr("class", "fas fa-play");
         clearInterval(playInterval);
@@ -989,15 +872,16 @@ var model = "HSIGN-Hsig";
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     model = bits[0];
+    $("#model").val(model);
     timeline.addCustomTime(bits[1], 1);
 } else {
-    timeline.addCustomTime("1871-1-1 12:00", 1);
+    timeline.addCustomTime("1993-01-01", 1);
 }
 window.model = model;
 var dateString = timeline.getCustomTime(1);
 timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
 $("#current").val(moment(dateString).format("YYYY-MM-DDTHH:mm"));
-fetchRanges();
+fetchDataForModel(model, dateString);
 
 $('#vis-tab').on('shown.bs.tab', function (e) {
     console.log("vis");
