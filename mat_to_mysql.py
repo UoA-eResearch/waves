@@ -76,12 +76,12 @@ if "ll" in files_to_process:
         for j in range(nishape[1]):
             lat = nimat["Yp"][i][j]
             lng = nimat["Xp"][i][j]
-            values.append(("NI", i, j, float(lng), float(lat)))
+            values.append(("NI", i, j, str(lng), str(lat)))
     for i in range(sishape[0]):
         for j in range(sishape[1]):
             lat = simat["Yp"][i][j]
             lng = simat["Xp"][i][j]
-            values.append(("SI", i, j, float(lng), float(lat)))
+            values.append(("SI", i, j, str(lng), str(lat)))
     cur.executemany(sql, values)
     db.commit()
     log("latlong table built. {} rows inserted".format(cur.rowcount))
