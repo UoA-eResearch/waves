@@ -501,56 +501,56 @@ $("#model").change(function(e) {
 var interval;
 
 $("#download").click(function() {
-    var dt = dataset.get(2);
-
-    var model = $("#exportmodel").val();
-
-    var bits = model.split("-");
-    var ftype = bits[0];
-    var subvar = bits[1];
-
-    var payload = {
-        start: moment(dt.start).format("YYYYMMDD_HHmmss"),
-        end: moment(dt.end).format("YYYYMMDD_HHmmss"),
-        file: ftype,
-        var: subvar,
-        format: "csv"
-    }
-    if (subset) {
-        payload.nimask = JSON.stringify(window.nimask);
-        payload.simask = JSON.stringify(window.simask);
-    }
-    /*
-    gtag('event', 'request', {
-        'event_category': 'export',
-        'event_label': JSON.stringify(payload)
-    });
-    */
     $("#statustext").text("Preparing export...");
     $("#download").attr("disabled", "disabled");
     $("#download").attr("class", "btn btn-secondary");
     $("#cancel_download").show();
-    $("#downloadprogress").text("0%");
-    $("#downloadprogress").css("width", "0%");
-    $("#downloadprogress").attr("aria-valuenow", 0);
-    $("#downloadprogresswrapper").show();
-    /*
-    try {
-        window.ws = new WebSocket(wsUrl);
-        window.ws.onopen = function() {
+    var dt = dataset.get(2);
+    var models = $("#exportmodel").val();
+    var labels = $(".multiselect-selected-text").text().split(",");
+    $.each(models, function(i, model) {
+        var label = labels[i];
+        var bits = model.split("-");
+        var ftype = bits[0];
+        var subvar = bits[1];
+
+        var payload = {
+            minDate: dateFormat(dt.start),
+            maxDate: dateFormat(dt.end),
+            ftype: ftype,
+            var: subvar,
+            format: "csv"
+        }
+        if (subset) {
+            wkt = Terraformer.WKT.convert(subset.toGeoJSON().geometry);
+            console.log(wkt);
+            payload.bounds = wkt;
+        }
+        /*
+        gtag('event', 'request', {
+            'event_category': 'export',
+            'event_label': JSON.stringify(payload)
+        });
+        */
+
+        $("#download_status").append('<div id="' + model + '_progress">' + label + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
+
+        var ws = new WebSocket(wsUrl);
+        ws.onopen = function() {
             ws.send(JSON.stringify(payload));
         };
-        window.ws.onmessage = function (evt) {
+        ws.onmessage = function (evt) {
             var data = JSON.parse(evt.data);
             console.log(data);
             if ('progress' in data) {
                 var pct = Math.round(data.progress * 100);
-                $("#downloadprogress").text(pct + "%");
-                $("#downloadprogress").css("width", pct + "%");
-                $("#downloadprogress").attr("aria-valuenow", pct);
+                $("#" + model + "_progress .downloadprogress").text(pct + "%");
+                $("#" + model + "_progress .downloadprogress").css("width", pct + "%");
+                $("#" + model + "_progress .downloadprogress").attr("aria-valuenow", pct);
             } else {
                 var url = baseUrl + data.url;
-                $("#statustext").html('Your export is ready for download - please click <a href="' + url + '">here</a> to download');
+                $("#" + model + "_progress .downloadprogress").html(label + ' is ready - click <a href="' + url + '">here</a> to download');
+                /*
                 $("#statustext a").click(function() {
                     gtag('event', 'download', {
                         'event_category': 'export',
@@ -561,67 +561,11 @@ $("#download").click(function() {
                     'event_category': 'export',
                     'event_label': url
                 });
-                $("#cancel_download").hide();
-                $("#downloadprogresswrapper").hide();
-                $("#download").removeAttr("disabled");
-                $("#download").attr("class", "btn btn-primary");
+                */
                 ws.close();
             }
-        };
-    } catch(err) {
-        */
-        var start = new Date();
-        clearInterval(interval);
-        var est_time_instance = window.est_time;
-        interval = setInterval(function() {
-            var elapsed = (new Date() - start) / 1000;
-            var pct = Math.round(elapsed / est_time_instance * 100);
-            console.log(elapsed, pct);
-            if (pct > 99) {
-                pct = 99;
-            }
-            $("#downloadprogress").text(pct + "%");
-            $("#downloadprogress").css("width", pct + "%");
-            $("#downloadprogress").attr("aria-valuenow", pct);
-        }, 1000);
-        window.currentXHR = $.getJSON(baseUrl, payload, function(data) {
-            var url = baseUrl + data.url;
-            $("#statustext").html('Your export is ready for download - please click <a href="' + url + '">here</a> to download');
-            $("#statustext a").click(function() {
-                /*
-                gtag('event', 'download', {
-                    'event_category': 'export',
-                    'event_label': url
-                });
-                */
-            });
-            /*
-            gtag('event', 'ready', {
-                'event_category': 'export',
-                'event_label': url
-            });
-            */
-        }).fail(function(e) {
-            if (e.statusText != "abort" && e.statusText != "error") {
-                var error = "There was an error exporting data for " + window.model + ": " + e.status + " " + e.statusText;
-                alert(error);
-                $("#statustext").html(error);
-                /*
-                gtag('event', 'error', {
-                    'event_category': 'export',
-                    'event_label': e.statusText
-                });
-                */
-            }
-            console.error(e);
-        }).always(function(e) {
-            $("#cancel_download").hide();
-            $("#downloadprogresswrapper").hide();
-            $("#download").removeAttr("disabled");
-            $("#download").attr("class", "btn btn-primary");
-            clearInterval(interval);
-        });
-    //}
+        }
+    });
 });
 
 $("#cancel_download").click(function() {
