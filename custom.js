@@ -508,11 +508,9 @@ $("#download").click(function() {
     $("#cancel_download").show();
     var dt = dataset.get(2);
     var models = $("#exportmodel").val();
-    var labels = $(".multiselect-selected-text").text().split(",");
     window.pending = 0;
     window.wsconnections = []
     $.each(models, function(i, model) {
-        var label = labels[i];
         var bits = model.split("-");
         var ftype = bits[0];
         var subvar = bits[1];
@@ -536,7 +534,7 @@ $("#download").click(function() {
         });
         */
 
-        $("#download_status").append('<div id="' + model + '_progress">' + label + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
+        $("#download_status").append('<div id="' + model + '_progress">' + model + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
 
         var ws = new WebSocket(wsUrl);
         window.pending++;
@@ -554,7 +552,7 @@ $("#download").click(function() {
                 $("#" + model + "_progress .downloadprogress").attr("aria-valuenow", pct);
             } else {
                 var url = baseUrl + data.url;
-                $("#" + model + "_progress").html(label + ' is ready - click <a href="' + url + '">here</a> to download');
+                $("#" + model + "_progress").html(model + ' is ready - click <a href="' + url + '">here</a> to download');
                 /*
                 $("#statustext a").click(function() {
                     gtag('event', 'download', {
