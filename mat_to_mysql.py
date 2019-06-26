@@ -105,6 +105,14 @@ if "depth" in files_to_process:
         for i in range(len(depth[island])):
             for j in range(len(depth[island][i])):
                 d = depth[island][i][j]
+                if d < 10:
+                    continue
+                if island == "si" and (j > 117 or i > 99):
+                    continue
+                if island == "ni" and (j < 6 or i < 4):
+                    continue
+                if island == "si" and (i > 57 and j > 56):
+                    continue
                 values.append((island, i, j, d))
     cur.executemany(sql, values)
     db.commit()
