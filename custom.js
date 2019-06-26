@@ -243,8 +243,8 @@ $("#max").change(function() {
     var midVal = (details.max + details.min) / 2;
     $("#mid").text(midVal.toFixed(dp) + details.suffix);
     var islands = ["ni", "si"];
-    for (var i in markers) {
-        var marker = markers[i];
+    for (var i in markerLookup) {
+        var marker = markerLookup[i];
         var o = marker.options;
         var normalized_v = ((o.v - details.min) / (details.max - details.min));
         if (subvar == "Dir") {
@@ -431,6 +431,7 @@ function handleData(data) {
         } else {
             marker.setStyle({color: color}).setTooltipContent(desc);
         }
+        marker.options.v = v;
         marker.addTo(markers);
         if (subvar == "Dir") {
             if (d.x % 5 == 0 && d.y % 5 == 0) {
