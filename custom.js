@@ -391,6 +391,7 @@ function handleData(data) {
         var d3 = Plotly.d3;
         details.min = d3.min(values);
         details.max = d3.max(values);
+        legendranges[subvar] = details;
     }
     var min = details.min;
     var max = details.max;
