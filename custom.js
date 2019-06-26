@@ -654,7 +654,7 @@ function snapDate(date) {
 var container = document.getElementById('timeline');
 
 var dataset = new vis.DataSet([
-    {id: 1, content: 'Data range', start: new Date(1993, 0, 1, 0), end: new Date(2013, 0, 1, 0), editable: false, selectable: false},
+    {id: 1, content: 'Data range', start: new Date(1993, 0, 1, 0), end: new Date(2012, 11, 31, 0), editable: false, selectable: false},
     {id: 2, content: 'On-click display range', start: new Date(1993, 0, 1, 0), end: new Date(1994, 0, 1, 0), editable: {updateTime: true, remove: false}}
 ]);
 
