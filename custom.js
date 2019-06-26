@@ -402,9 +402,6 @@ function handleData(data) {
     $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
     var n = 0;
     console.log(data);
-    if (window.lastvar == "Depth") {
-        markers.clearLayers();
-    }
     window.lastvar = subvar;
     for (var i in data.results) {
         var d = data.results[i];
