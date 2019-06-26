@@ -29,7 +29,7 @@ def getParamsOrDefaults(params):
     if 'ftype' not in params:
         params['ftype'] = "HSIGN"
     if 'var' not in params:
-        params['var'] = "Hsig"
+        params['var'] = "m.*"
     if 'bounds' not in params:
         params['bounds'] = "Polygon((160 -30.5,187 -30.5,187 -49.5,160 -49.5, 160 -30.5))"
     if 'minDate' not in params:
@@ -72,8 +72,9 @@ def getFilenameForParams(params, ext = 'csv'):
 
 def writeCSV(filename, results):
     filename_with_path = os.path.join("exports", filename)
+    headers = sorted([k for k in results[0].keys() if k not in ["x", "y", "m.x", "m.y", "t", "island"]])
     with open(filename_with_path, 'w') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=["lat", "lng", "datetime", "height"])
+        writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(results)
     zipfilename = filename_with_path.replace(".csv", ".zip")
