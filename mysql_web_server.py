@@ -121,25 +121,30 @@ def handle_websocket(db):
                 continue
             params = getParamsOrDefaults(params)
             print(params)
-            fromwhere = getQueryForParams(params)
-            countquery = "SELECT COUNT(*) as count" + fromwhere
-            print(countquery)
-            db.execute(countquery)
-            count = db.fetchone()['count']
-            print("{}s - {} results to fetch".format(time.time() - s, count))
-            results = []
-            query = "SELECT ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
-            chunksize = 500
-            for i in range(0, count, chunksize):
-                if count - i < chunksize:
-                    chunksize = count - i
-                chunked_query = query + " LIMIT {} OFFSET {}".format(chunksize, i)
-                db.execute(chunked_query)
-                print("{}s - query for chunk {} executed".format(time.time() - s, i))
-                theseresults = db.fetchall()
-                results.extend(theseresults)
-                pct_done = float(i) / float(count)
-                wsock.send(json.dumps({"progress": pct_done}))
+            if params["ftype"] == "DEPTH":
+                query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH m INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong)"
+                db.execute(query)
+                results = db.fetchall()
+            else:
+                fromwhere = getQueryForParams(params)
+                countquery = "SELECT COUNT(*) as count" + fromwhere
+                print(countquery)
+                db.execute(countquery)
+                count = db.fetchone()['count']
+                print("{}s - {} results to fetch".format(time.time() - s, count))
+                results = []
+                query = "SELECT ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
+                chunksize = 500
+                for i in range(0, count, chunksize):
+                    if count - i < chunksize:
+                        chunksize = count - i
+                    chunked_query = query + " LIMIT {} OFFSET {}".format(chunksize, i)
+                    db.execute(chunked_query)
+                    print("{}s - query for chunk {} executed".format(time.time() - s, i))
+                    theseresults = db.fetchall()
+                    results.extend(theseresults)
+                    pct_done = float(i) / float(count)
+                    wsock.send(json.dumps({"progress": pct_done}))
             print("{}s - all {} results fetched".format(time.time() - s, len(results)))
             if params['format'] == 'csv':
                 filename = getFilenameForParams(params)
