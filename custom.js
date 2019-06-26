@@ -502,12 +502,15 @@ var interval;
 
 $("#download").click(function() {
     $("#statustext").text("Preparing export...");
+    $("#download_status").text("");
     $("#download").attr("disabled", "disabled");
     $("#download").attr("class", "btn btn-secondary");
     $("#cancel_download").show();
     var dt = dataset.get(2);
     var models = $("#exportmodel").val();
     var labels = $(".multiselect-selected-text").text().split(",");
+    window.pending = 0;
+    window.wsconnections = []
     $.each(models, function(i, model) {
         var label = labels[i];
         var bits = model.split("-");
@@ -536,6 +539,8 @@ $("#download").click(function() {
         $("#download_status").append('<div id="' + model + '_progress">' + label + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
 
         var ws = new WebSocket(wsUrl);
+        window.pending++;
+        window.wsconnections.push(ws);
         ws.onopen = function() {
             ws.send(JSON.stringify(payload));
         };
@@ -549,7 +554,7 @@ $("#download").click(function() {
                 $("#" + model + "_progress .downloadprogress").attr("aria-valuenow", pct);
             } else {
                 var url = baseUrl + data.url;
-                $("#" + model + "_progress .downloadprogress").html(label + ' is ready - click <a href="' + url + '">here</a> to download');
+                $("#" + model + "_progress").html(label + ' is ready - click <a href="' + url + '">here</a> to download');
                 /*
                 $("#statustext a").click(function() {
                     gtag('event', 'download', {
@@ -563,6 +568,14 @@ $("#download").click(function() {
                 });
                 */
                 ws.close();
+                window.pending--;
+                if (window.pending == 0) {
+                    console.log("all done!");
+                    $("#cancel_download").hide();
+                    $("#download").removeAttr("disabled");
+                    $("#download").attr("class", "btn btn-primary");
+                    $("#statustext").html("Export complete");
+                }
             }
         }
     });
@@ -570,12 +583,13 @@ $("#download").click(function() {
 
 $("#cancel_download").click(function() {
     $("#cancel_download").hide();
-    $("#downloadprogresswrapper").hide();
     $("#download").removeAttr("disabled");
     $("#download").attr("class", "btn btn-primary");
     $("#statustext").html("Export cancelled");
-    if (window.ws) {
-        window.ws.close();
+    if (window.wsconnections) {
+        for (var i in window.wsconnections) {
+            window.wsconnections[i].close();
+        }
     } else if (window.currentXHR) {
         window.currentXHR.abort();
         clearInterval(interval);
