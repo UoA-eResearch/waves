@@ -43,6 +43,9 @@
                 <li class="nav-item">
                     <a class="nav-link" id="export-tab" data-toggle="tab" href="#export" role="tab" aria-controls="export" aria-selected="false">Data Exporting</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="about-tab" data-toggle="tab" href="#about" role="tab" aria-controls="about" aria-selected="false">About</a>
+                </li>
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
@@ -99,13 +102,7 @@
                         </optgroup>
                     </select>
                     <small id="selectHelp" class="form-text">
-                        PTDIR = partition of peak wave direction in degrees<br>
-                        PTDSPR = directional spreading (in degrees)<br>
-                        PDIR = peak wave direction in degrees<br>
-                        PTHSIGN = partition of the significant wave height (in m)<br>
-                        PTRTP = partition of the relative peak period (in s).<br>
-                        Click <a href="http://swanmodel.sourceforge.net/online_doc/swanuse/node32.html">here</a> or 
-                        <a href="https://publicwiki.deltares.nl/display/NETCDF/SWAN+Standard+names">here</a> for more information.
+                        For an explanation of these variables, please click <a href="vars.pdf">here</a>
                     </small>
 
                     <div id="download_info">
@@ -134,6 +131,33 @@
                         <div id="download_status">
                         </div>
                     </div>
+                </div>
+                <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
+                        <h4>A high resolution 20-year partitioned hindcast for the New Zealand area</h4>
+                        <i>João Albuquerque, Jose A. A. Antolínez, Ana Rueda, Fernando J. Méndez, Giovanni Coco</i><br><br>
+                        Partitioned WAVEWATCH-III results from a 20-year (1993-2012) global wave model
+                        (Rascle and Ardhuin, 2013) were calibrated using a state-of-the-art directional wind-sea
+                        and swell wave height correction method based on satellite data (Albuquerque et al.,
+                        2018). The corrected partitions were then used to reconstruct the multimodal wave spectra
+                        along the boundaries of a SWAN grid that encompasses the whole New Zealand area.
+                        Waves were downscaled in non-stationary mode with CFSR wind forcings through 2 levels
+                        of nested grids, having both partitioned and integrated parameters stored at a 10Km
+                        resolution. Validation carried out against the available buoy data shows a good agreement
+                        between instrumental and hindcast data. Wave parameters estimated in areas where the
+                        water depth is lower than 30 metres were discarded as they might not represent physically
+                        sound values due to depth and grid resolution.
+                        As the latest published hindcast of the New Zealand waters dates back from 2001 the
+                        presented database, providing extensible and reliable information of the wave
+                        characteristics of New Zealand, will be of great value to a number of future studies, such
+                        as beach erosion, coastal inundation, and risk assessment. The partitioned wave data can
+                        provide valuable insights on the regional wave climate and its main drivers. The full
+                        description of data and methods will be available shortly in Albuquerque et al., 2019 (in
+                        prep).
+                        We acknowledge funding from a Hazard Platform grant to Giovanni Coco. We also
+                        acknowledge NeSI for providing us the computing power necessary to perform the
+                        simulations and for assisting us on the development of this hindcast web-interface.
+                        For more information about the authors and their research group, please visit
+                        <a href="http://coastalhub.science">http://coastalhub.science</a> or twitter’s <a href="https://twitter.com/coastandoceanc1">coastandoceancollective</a> page.
                 </div>
             </div>
         </div>
