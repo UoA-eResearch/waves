@@ -165,8 +165,8 @@ if __name__ == "__main__":
         host='localhost',
         port=8081,
         server='gunicorn',
-        workers=8,
+        workers=16,
         worker_class="geventwebsocket.gunicorn.workers.GeventWebSocketWorker",
-        timeout=3600,
+        timeout=86400,
         capture_output=True
     )
