@@ -265,7 +265,11 @@ var chartProgressInterval;
 
 function plotData(container, results) {
     var details = legendranges[subvar];
-    var title = subvar + "(" + details.suffix + ")";
+    var suffix = "";
+    if (details) {
+        var suffix = details.suffix;
+    }
+    var title = subvar + "(" + suffix + ")";
     var d3 = Plotly.d3
     var dts = unpack(results, 'datetime')
     var values = unpack(results, subvar)
@@ -302,7 +306,7 @@ function plotData(container, results) {
     };
     Plotly.newPlot(container[0], data, layout);
 
-    var meanS = Math.round(mean * 10) / 10 + details.suffix;
+    var meanS = Math.round(mean * 10) / 10 + suffix;
     $(container).parent().append("<div class='mean'>Mean=" + meanS + "</div>");
 }
 
@@ -381,6 +385,14 @@ function handleData(data) {
     map.spin(false);
     var maxHSV = 250;
     var details = legendranges[subvar];
+    if (!details) {
+        details = {suffix: ""}
+        var values = unpack(data.results, subvar);
+        var d3 = Plotly.d3;
+        details.min = d3.min(values);
+        details.max = d3.max(values);
+        legendranges[subvar] = details;
+    }
     var min = details.min;
     var max = details.max;
     if (subvar == "Dir") {
@@ -402,9 +414,6 @@ function handleData(data) {
     $("#colorbar #min").text(min.toFixed(dp) + details.suffix);
     var n = 0;
     console.log(data);
-    if (window.lastvar == "Depth") {
-        markers.clearLayers();
-    }
     window.lastvar = subvar;
     for (var i in data.results) {
         var d = data.results[i];
