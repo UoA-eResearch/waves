@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import scipy.io
 import sys
@@ -11,10 +11,9 @@ from multiprocessing import Pool, cpu_count
 import json
 
 files_to_process = sys.argv[1:]
-times = pd.date_range("1993-01-01", "2013-01-01", freq="3H")
+times = pd.date_range("1993-01-01", "2101-01-01", freq="3H")
 
-with open("depth.json") as f:
-    depth = json.load(f)
+depth = pd.read_csv("depth_filtered.csv")
 
 def init():
     global db, cur
@@ -126,9 +125,15 @@ def load_file(args):
     filename_without_ext = os.path.splitext(os.path.basename(f))[0]
     island, date_range, ftype = filename_without_ext.split("-")
 
+    if "models" in f:
+        model = f.split("/")[-2]
+        ftype = f"{model}-{ftype}"
+
     start, end = date_range.split("_")
-    start = pd.to_datetime(start, yearfirst=True)
-    end = pd.to_datetime(end, yearfirst=True)
+    w = scipy.io.whosmat(f)
+    t = [x[0][5:] for x in w if x[0].startswith("Time")]
+    start = pd.to_datetime(t[0], format="%Y%m%d_%H%M%S")
+    end = pd.to_datetime(t[-1], format="%Y%m%d_%H%M%S")
     startid = times.get_loc(start)
     endid = times.get_loc(end)
 
@@ -180,13 +185,7 @@ def load_file(args):
         dateStr = date.strftime("%Y%m%d_%H%M%S")
         for i in range(shape[0]):
             for j in range(shape[1]):
-                if depth[island.lower()][i][j] < 10:
-                    continue
-                if island == "SI" and (j > 117 or i > 99):
-                    continue
-                if island == "NI" and (j < 6 or i < 4):
-                    continue
-                if island == "SI" and (i > 57 and j > 56):
+                if not any((depth.island == island) & (depth.i == i) & (depth.j == j)):
                     continue
                 thisRow = [island, i, j, t]
                 for var in unique_keys:
@@ -209,6 +208,6 @@ def load_file(args):
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
 
 
-PROCESSES = cpu_count() / 4
+PROCESSES = int(cpu_count() / 4)
 p = Pool(processes=PROCESSES, initializer=init)
 p.map(load_file, enumerate(files_to_process))
