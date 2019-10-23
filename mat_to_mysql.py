@@ -34,7 +34,7 @@ if "date" in files_to_process:
     init()
 
     sql = """CREATE TABLE IF NOT EXISTS `date` (
-                `id` smallint(5) UNSIGNED NOT NULL,
+                `id` mediumint(5) UNSIGNED NOT NULL,
                 `datetime` datetime NOT NULL,
                 PRIMARY KEY (`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
@@ -53,7 +53,7 @@ if "ll" in files_to_process:
     files_to_process.remove("ll")
     init()
 
-    sql = """CREATE TABLE IF NOT EXISTS `latlong` (
+    sql = """CREATE TABLE IF NOT EXISTS `latlong_new` (
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
@@ -64,12 +64,12 @@ if "ll" in files_to_process:
     cur.execute(sql)
     db.commit()
 
-    nimat = scipy.io.loadmat("data/NI-990701_991231-RTP.mat")
-    simat = scipy.io.loadmat("data/SI-990701_991231-RTP.mat")
+    nimat = scipy.io.loadmat("data/models/NI-930101_930630-DEPTH.mat")
+    simat = scipy.io.loadmat("data/models/SI-930101_930630-DEPTH.mat")
 
     nishape = nimat["Yp"].shape
     sishape = simat["Yp"].shape
-    sql = "REPLACE INTO latlong (island, x, y, latlong) VALUES (%s, %s, %s, POINT(%s, %s))"
+    sql = "REPLACE INTO latlong_new (island, x, y, latlong) VALUES (%s, %s, %s, POINT(%s, %s))"
     values = []
     for i in range(nishape[0]):
         for j in range(nishape[1]):
@@ -162,7 +162,7 @@ def load_file(args):
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
-                `t` smallint(5) UNSIGNED NOT NULL
+                `t` mediumint(5) UNSIGNED NOT NULL
           """.format(ftype)
     for var in unique_keys:
         sql += ",`{}` double DEFAULT NULL\n".format(var)
