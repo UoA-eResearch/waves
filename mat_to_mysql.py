@@ -165,7 +165,7 @@ def load_file(args):
                 `t` mediumint(5) UNSIGNED NOT NULL
           """.format(ftype)
     for var in unique_keys:
-        sql += ",`{}` double DEFAULT NULL\n".format(var)
+        sql += ",`{}` float DEFAULT NULL\n".format(var)
     sql += ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
     print(sql)
     cur.execute(sql)
