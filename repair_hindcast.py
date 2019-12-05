@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import scipy.io
 import sys
@@ -9,12 +9,12 @@ import mysql.connector
 import config
 from multiprocessing import Pool, cpu_count
 import json
-from tqdm import tqdm
 
 files_to_process = sys.argv[1:]
-times = pd.date_range("1993-01-01", "2101-01-01", freq="3H")
+times = pd.date_range("1993-01-01", "2013-01-01", freq="3H")
 
-depth = pd.read_csv("depth_filtered.csv")
+with open("depth.json") as f:
+    depth = json.load(f)
 
 def init():
     global db, cur
@@ -24,7 +24,7 @@ def init():
         passwd=config.passwd,
         db="wave"
     )
-    cur = db.cursor(buffered=True)
+    cur = db.cursor()
 
 def log(msg):
     print(pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S") + ": " + msg)
@@ -35,7 +35,7 @@ if "date" in files_to_process:
     init()
 
     sql = """CREATE TABLE IF NOT EXISTS `date` (
-                `id` mediumint(5) UNSIGNED NOT NULL,
+                `id` smallint(5) UNSIGNED NOT NULL,
                 `datetime` datetime NOT NULL,
                 PRIMARY KEY (`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;"""
@@ -54,7 +54,7 @@ if "ll" in files_to_process:
     files_to_process.remove("ll")
     init()
 
-    sql = """CREATE TABLE IF NOT EXISTS `latlong_new` (
+    sql = """CREATE TABLE IF NOT EXISTS `latlong` (
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
@@ -65,12 +65,12 @@ if "ll" in files_to_process:
     cur.execute(sql)
     db.commit()
 
-    nimat = scipy.io.loadmat("data/models/NI-930101_930630-DEPTH.mat")
-    simat = scipy.io.loadmat("data/models/SI-930101_930630-DEPTH.mat")
+    nimat = scipy.io.loadmat("data/NI-990701_991231-RTP.mat")
+    simat = scipy.io.loadmat("data/SI-990701_991231-RTP.mat")
 
     nishape = nimat["Yp"].shape
     sishape = simat["Yp"].shape
-    sql = "REPLACE INTO latlong_new (island, x, y, latlong) VALUES (%s, %s, %s, POINT(%s, %s))"
+    sql = "REPLACE INTO latlong (island, x, y, latlong) VALUES (%s, %s, %s, POINT(%s, %s))"
     values = []
     for i in range(nishape[0]):
         for j in range(nishape[1]):
@@ -126,19 +126,14 @@ def load_file(args):
     filename_without_ext = os.path.splitext(os.path.basename(f))[0]
     island, date_range, ftype = filename_without_ext.split("-")
 
-    if "models" in f:
-        model = f.split("/")[-2]
-        ftype = f"{model}-{ftype}"
-
     start, end = date_range.split("_")
-    w = scipy.io.whosmat(f)
-    t = [x[0][5:] for x in w if x[0].startswith("Time")]
-    start = pd.to_datetime(t[0], format="%Y%m%d_%H%M%S")
-    end = pd.to_datetime(t[-1], format="%Y%m%d_%H%M%S")
+    start = pd.to_datetime(start, yearfirst=True)
+    end = pd.to_datetime(end, yearfirst=True)
     startid = times.get_loc(start)
     endid = times.get_loc(end)
+    true_endid = endid + 7
 
-    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, startid)
+    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, true_endid)
     try:
         cur.execute(sql)
         result = cur.fetchone()[0]
@@ -163,10 +158,10 @@ def load_file(args):
                 `island` enum('NI','SI') NOT NULL,
                 `x` tinyint(3) UNSIGNED NOT NULL,
                 `y` tinyint(3) UNSIGNED NOT NULL,
-                `t` mediumint(5) UNSIGNED NOT NULL
+                `t` smallint(5) UNSIGNED NOT NULL
           """.format(ftype)
     for var in unique_keys:
-        sql += ",`{}` float DEFAULT NULL\n".format(var)
+        sql += ",`{}` double DEFAULT NULL\n".format(var)
     sql += ") ENGINE=InnoDB DEFAULT CHARSET=latin1;"
     print(sql)
     cur.execute(sql)
@@ -179,35 +174,42 @@ def load_file(args):
     )
     values = []
 
-    island_depth = depth[depth.island == island]
-
     shape = mat["Xp"].shape
-    for t in tqdm(range(startid, endid + 1)):
+    values = []
+    for t in range(endid + 1, true_endid + 1):
         date = times[t]
         dateStr = date.strftime("%Y%m%d_%H%M%S")
-        values = []
-        for i, j in zip(island_depth.i, island_depth.j):
-            thisRow = [island, i, j, t]
-            for var in unique_keys:
-                key = var + "_" + dateStr
-                val = float(mat[key][i][j])
-                if np.isnan(val):
-                    val = None
-                if val == float('inf'):
-                    val = 9999
-                thisRow.append(val)
-            if any(thisRow[4:]):
-                values.append(thisRow)
-        log("{} values prepared, commencing executemany".format(len(values)))
-        cur.executemany(sql, values)
-    
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                if depth[island.lower()][i][j] < 10:
+                    continue
+                if island == "SI" and (j > 117 or i > 99):
+                    continue
+                if island == "NI" and (j < 6 or i < 4):
+                    continue
+                if island == "SI" and (i > 57 and j > 56):
+                    continue
+                thisRow = [island, i, j, t]
+                for var in unique_keys:
+                    key = var + "_" + dateStr
+                    val = float(mat[key][i][j])
+                    if np.isnan(val):
+                        val = None
+                    if val == float('inf'):
+                        val = 9999
+                    thisRow.append(val)
+                if any(thisRow[4:]):
+                    values.append(thisRow)
+
+    log("{} values prepared, commencing executemany".format(len(values)))
     del mat
+    cur.executemany(sql, values)
     del values
     db.commit()
 
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
 
 
-PROCESSES = int(cpu_count() / 4)
+PROCESSES = cpu_count() / 4
 p = Pool(processes=PROCESSES, initializer=init)
 p.map(load_file, enumerate(files_to_process))

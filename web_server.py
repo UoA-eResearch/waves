@@ -9,6 +9,7 @@ import csv
 from zipfile import ZipFile, ZIP_DEFLATED
 from datetime import datetime, timedelta
 import psutil
+import pandas as pd
 
 MAX_MEMORY_PCT = 90
 
@@ -18,7 +19,7 @@ mat_cache = []
 
 valid_keys = json.load(open("file_types_and_keys.json"))
 latlongs = json.load(open("latlongs.json"))
-depth = json.load(open("depth.json"))
+depth = pd.read_csv("depth_filtered.csv")
 files = os.listdir("data")
 date_ranges = set()
 for f in files:
