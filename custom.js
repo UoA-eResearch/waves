@@ -467,13 +467,17 @@ function fetchDataForModel(model, dt) {
     location.hash = model + "@" + dateFormat(dt);
     dt = moment(dt).format("YYYY-MM-DD HH:mm:ss");
     console.log("fetching", baseUrl, model, dt);
-    var bits = model.split("-");
+    var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
     var subvar = bits[1];
     window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
-        $.getJSON(baseUrl, { ftype: "DIR", var: "Dir", minDate: dt, maxDate: dt }, function(data) {
+        var dirftype = "DIR";
+        if (ftype.includes("-")) {
+            dirftype = ftype.rsplit("-", 1)[0] + "-DIR";
+        }
+        $.getJSON(baseUrl, { ftype: dirftype, var: "Dir", minDate: dt, maxDate: dt }, function(data) {
             for (var i in data.results) {
                 var v = data.results[i];
                 if (v.x % 5 == 0 && v.y % 5 == 0) {
@@ -501,10 +505,32 @@ function fetchDataForModel(model, dt) {
 var ONE_DAY_MS = 1000 * 60 * 60 * 24;
 var ONE_YEAR_MS = ONE_DAY_MS * 365;
 
+function fetchRangeForModel(model) {
+    var table = model.replace("NZ-HIST-000-", "").rsplit("-", 1)[0];
+    $.getJSON(baseUrl + "range/" + table, function(data) {
+        console.log(data);
+        var start = new Date(data.minDate);
+        var end = new Date(data.maxDate);
+        dataset.update({id: 1, content: model, start: start, end: end});
+        var ct = timeline.getCustomTime(1);
+        if (ct < start || ct > end) {
+            timeline.setCustomTime(start, 1);
+            timeline.setCustomTimeTitle("Drag this control to display data for a specific date. Current time: " + dateFormat(start), 1);
+            timeline.setWindow(start.getTime() - ONE_YEAR_MS, end.getTime() + ONE_YEAR_MS);
+        }
+        var dateRange = dataset.get(2);
+        if (dateRange.start < start || dateRange.end > end) {
+            dataset.update({id: 2, start: start, end: end});
+        }
+        markers.clearLayers();
+        markerLookup = [];
+        fetchDataForModel(model, timeline.getCustomTime(1));
+    });
+}
 
-$("#model").change(function(e) {
-    window.model = this.value;
-    fetchDataForModel(this.value, timeline.getCustomTime(1));
+$("#model,#var").change(function(e) {
+    window.model = $("#model").val() + "-" + $("#var").val();
+    fetchRangeForModel(window.model);
 });
 
 var interval;
@@ -832,16 +858,27 @@ $("#play").click(function() {
 
 $('#exportmodel').multiselect();
 
-var model = "HSIGN-Hsig";
+String.prototype.rsplit = function(sep, maxsplit) {
+    var split = this.split(sep);
+    return maxsplit ? [ split.slice(0, -maxsplit).join(sep) ].concat(split.slice(-maxsplit)) : split;
+}
+
+var model = "NZ-HIST-000";
+var variable = "HSIGN-Hsig";
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
-    model = bits[0];
+    var model_var = bits[0];
+    var dt = bits[1];
+    model = model_var.substring(0,11);
+    variable = model_var.substring(12);
+    console.log(model, variable);
     $("#model").val(model);
-    timeline.addCustomTime(bits[1], 1);
+    $("#var").val(variable);
+    timeline.addCustomTime(dt, 1);
 } else {
     timeline.addCustomTime("1993-01-01 00:00", 1);
 }
-window.model = model;
+window.model = model + "-" + variable;
 var dateString = timeline.getCustomTime(1);
 timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
 $("#current").val(moment(dateString).format("YYYY-MM-DDTHH:mm"));

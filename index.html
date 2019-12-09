@@ -49,11 +49,32 @@
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
-                        <h4>Select a variable to visualise</h4>
                         <form>
+                            <h4>Select a model</h4>
                             <div class="form-group">
                                 <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;">
-                                    <option value="HSIGN-Hsig">Hsig</option>
+                                        <option value="NZ-HIST-000" selected>NZ Historical</option>
+                                        <option value="NZ-HIST-H0A">ACCESS1.0-HIST</option>
+                                        <option value="NZ-PROJ-M4A">ACCESS1.0-M21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-M8A">ACCESS1.0-M21C-RCP8.5</option>
+                                        <option value="NZ-PROJ-E4A">ACCESS1.0-E21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-E8A">ACCESS1.0-E21C-RCP8.5</option>
+                                        <option value="NZ-HIST-H0C">CNRM-CM5-HIST</option>
+                                        <option value="NZ-PROJ-M4A">CNRM-CM5-M21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-M8C">CNRM-CM5-M21C-RCP8.5</option>
+                                        <option value="NZ-PROJ-E4C">CNRM-CM5-E21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-E8C">CNRM-CM5-E21C-RCP8.5</option>
+                                        <option value="NZ-HIST-H0M">MIROC5-HIST</option>
+                                        <option value="NZ-PROJ-M4M">MIROC5-M21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-M8M">MIROC5-M21C-RCP8.5</option>
+                                        <option value="NZ-PROJ-E4M">MIROC5-E21C-RCP4.5</option>
+                                        <option value="NZ-PROJ-E8M">MIROC5-E21C-RCP8.5</option>
+                                </select>
+                            </div>
+                            <h4>Select a variable to visualise</h4>
+                            <div class="form-group">
+                                <select id="var" class="form-control" aria-describedby="selectHelp" style="outline: none;">
+                                    <option value="HSIGN-Hsig" selected>Hsig</option>
                                     <option value="DIR-Dir">Dir</option>
                                     <option value="RTP-RTpeak">Tpeak</option>
                                     <option value="RTM01-RTm01">Tm01</option>
