@@ -112,10 +112,10 @@ def get(db):
 @application.get('/range/<table>')
 def range(db, table):
     db.execute(f"SELECT DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') as minDate FROM date d WHERE d.id = (SELECT MIN(t) FROM `{table}`)")
-    minDate = db.fetchone()
+    result = db.fetchone()
     db.execute(f"SELECT DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') as maxDate FROM date d WHERE d.id = (SELECT MAX(t) FROM `{table}`)")
-    maxDate = db.fetchone()
-    return {"minDate": minDate, "maxDate": maxDate}
+    result.update(db.fetchone())
+    return result
 
 @application.route('/websocket')
 def handle_websocket(db):
