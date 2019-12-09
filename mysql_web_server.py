@@ -38,6 +38,12 @@ def getParamsOrDefaults(params):
         params['maxDate'] = '1993-01-01 00:00:00'
     if 'format' not in params:
         params['format'] = 'json'
+    if "-" in params["ftype"]:
+        params["lltable"] = "latlong_new"
+        params["depthtable"] = "DEPTH_new"
+    else:
+        params["lltable"] = "latlong"
+        params["depthtable"] = "DEPTH"
     return params
 
 def getQueryForParams(params):
@@ -45,7 +51,7 @@ def getQueryForParams(params):
         optimal_index = "t"
     else:
         optimal_index = "ixyt"
-    fromwhere = " FROM `" + params['ftype'] + "` m USE INDEX(" + optimal_index + ") INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id INNER JOIN DEPTH z ON m.island = z.island AND m.x = z.x AND m.y = z.y "
+    fromwhere = " FROM `" + params['ftype'] + "` m USE INDEX(" + optimal_index + ") INNER JOIN `" + params["lltable"] + "` l ON m.island = l.island AND m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id INNER JOIN " + params["depthtable"] + " z ON m.island = z.island AND m.x = z.x AND m.y = z.y "
     fromwhere += "WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND d.datetime BETWEEN '" + params['minDate'] + "' AND '" + params['maxDate'] + "' AND z.Depth > 30"
     return fromwhere
 
@@ -93,6 +99,8 @@ def get(db):
     params = getParamsOrDefaults(request.params)
     if params["ftype"] == "DEPTH":
         query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH m INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND Depth > 30"
+    elif "DEPTH" in params["ftype"]:
+        query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH_new m INNER JOIN `latlong_new` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND Depth > 30"
     else:
         fromwhere = getQueryForParams(params)
         query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
@@ -136,6 +144,10 @@ def handle_websocket(db):
             print(params)
             if params["ftype"] == "DEPTH":
                 query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH m INNER JOIN `latlong` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND Depth > 30"
+                db.execute(query)
+                results = db.fetchall()
+            elif "DEPTH" in params["ftype"]:
+                query = "SELECT m.x AS x, m.y AS y, ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, Depth FROM DEPTH_new m INNER JOIN `latlong_new` l ON m.island = l.island AND m.x = l.x AND m.y = l.y WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND Depth > 30"
                 db.execute(query)
                 results = db.fetchall()
             else:
