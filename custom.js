@@ -530,7 +530,13 @@ function fetchRangeForModel(model) {
 
 $("#model,#var").change(function(e) {
     window.model = $("#model").val() + "-" + $("#var").val();
-    fetchRangeForModel(window.model);
+    if ($("#var").val() == "DEPTH-Depth") {
+        markers.clearLayers();
+        markerLookup = [];
+        fetchDataForModel(window.model);
+    } else {
+        fetchRangeForModel(window.model);
+    }
 });
 
 var interval;
