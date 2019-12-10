@@ -124,8 +124,9 @@ def load_file(args):
     end = pd.to_datetime(t[-1], format="%Y%m%d_%H%M%S")
     startid = times.get_loc(start)
     endid = times.get_loc(end)
+    print(startid, endid)
 
-    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, startid)
+    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, int(startid + (endid - startid) / 2))
     try:
         cur.execute(sql)
         result = cur.fetchone()[0]
