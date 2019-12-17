@@ -118,7 +118,7 @@ def get(db):
 
 
 @application.get('/range/<table>')
-def range(db, table):
+def get_range(db, table):
     db.execute(f"SELECT DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') as minDate FROM date d WHERE d.id = (SELECT MIN(t) FROM `{table}`)")
     result = db.fetchone()
     db.execute(f"SELECT DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') as maxDate FROM date d WHERE d.id = (SELECT MAX(t) FROM `{table}`)")
