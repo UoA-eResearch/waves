@@ -50,7 +50,7 @@
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
                         <form>
-                            <h4>Select a model</h4>
+                            <h4>Step 1: Select a model</h4>
                             <div class="form-group">
                                 <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;">
                                         <option value="NZ-HIST-000" selected>NZ Historical</option>
@@ -71,7 +71,7 @@
                                         <option value="NZ-PROJ-E8M">MIROC5-E21C-RCP8.5</option>
                                 </select>
                             </div>
-                            <h4>Select a variable to visualise</h4>
+                            <h4>Step 2: Select a variable to visualise</h4>
                             <div class="form-group">
                                 <select id="var" class="form-control" aria-describedby="selectHelp" style="outline: none;">
                                     <option value="HSIGN-Hsig" selected>Hsig</option>
@@ -89,8 +89,29 @@
                 </div>
                 <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
 
-                    <h4>Step 1: Select variables to export</h4>
-                    <select id="exportmodel" class="form-control" aria-describedby="selectHelp" style="outline: none;" multiple>
+                    <h4>Step 1: Select a model</h4>
+                    <div class="form-group">
+                        <select id="exportmodel" class="form-control" aria-describedby="selectHelp" style="outline: none;">
+                                <option value="NZ-HIST-000" selected>NZ Historical</option>
+                                <option value="NZ-HIST-H0A">ACCESS1.0-HIST</option>
+                                <option value="NZ-PROJ-M4A">ACCESS1.0-M21C-RCP4.5</option>
+                                <option value="NZ-PROJ-M8A">ACCESS1.0-M21C-RCP8.5</option>
+                                <option value="NZ-PROJ-E4A">ACCESS1.0-E21C-RCP4.5</option>
+                                <option value="NZ-PROJ-E8A">ACCESS1.0-E21C-RCP8.5</option>
+                                <option value="NZ-HIST-H0C">CNRM-CM5-HIST</option>
+                                <option value="NZ-PROJ-M4A">CNRM-CM5-M21C-RCP4.5</option>
+                                <option value="NZ-PROJ-M8C">CNRM-CM5-M21C-RCP8.5</option>
+                                <option value="NZ-PROJ-E4C">CNRM-CM5-E21C-RCP4.5</option>
+                                <option value="NZ-PROJ-E8C">CNRM-CM5-E21C-RCP8.5</option>
+                                <option value="NZ-HIST-H0M">MIROC5-HIST</option>
+                                <option value="NZ-PROJ-M4M">MIROC5-M21C-RCP4.5</option>
+                                <option value="NZ-PROJ-M8M">MIROC5-M21C-RCP8.5</option>
+                                <option value="NZ-PROJ-E4M">MIROC5-E21C-RCP4.5</option>
+                                <option value="NZ-PROJ-E8M">MIROC5-E21C-RCP8.5</option>
+                        </select>
+                    </div>
+                    <h4>Step 2: Select variables to export</h4>
+                    <select id="exportmodelvars" class="form-control" aria-describedby="selectHelp" style="outline: none;" multiple>
                         <optgroup label="Integrated:">
                             <option value="HSIGN-Hsig">Hsig</option>
                             <option value="HSWELL-Hswell">Hswell</option>
@@ -127,13 +148,13 @@
                     </small>
 
                     <div id="download_info">
-                        <h4>Step 2: Select data points</h4>
+                        <h4>Step 3: Select data points</h4>
                         <small>To select a subset of data points, use the polygon or rectangle tool. Making a new selection will replace the previous selection.</small>
                         <div id="control"></div>
                         <h6>
                             <span id="selected_points">0</span> data points selected.
                         </h6>
-                        <h4>Step 3: Select a time range</h4>
+                        <h4>Step 4: Select a time range</h4>
                         <small>Adjust the time range here or by dragging the ends of the timeseries export range control at the bottom.</small>
                         <h6>Timeseries range:</h6>
                         <form class="form-inline">

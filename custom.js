@@ -556,12 +556,16 @@ $("#download").click(function() {
     $("#download").attr("class", "btn btn-secondary");
     $("#cancel_download").show();
     var dt = dataset.get(2);
-    var models = $("#exportmodel").val();
+    var model = $("#exportmodel").val();
+    var vars = $("#exportmodelvars").val();
     window.pending = 0;
     window.wsconnections = []
-    $.each(models, function(i, model) {
-        var bits = model.split("-");
+    $.each(vars, function(i, v) {
+        var bits = v.split("-");
         var ftype = bits[0];
+        if (model != "NZ-HIST-000") {
+            ftype = model + "-" + ftype;
+        }
         var subvar = bits[1];
 
         var payload = {
@@ -870,7 +874,7 @@ $("#play").click(function() {
 });
 
 
-$('#exportmodel').multiselect();
+$('#exportmodelvars').multiselect();
 
 String.prototype.rsplit = function(sep, maxsplit) {
     var split = this.split(sep);
