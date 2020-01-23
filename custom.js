@@ -578,7 +578,7 @@ $("#download").click(function() {
     $("#download").attr("class", "btn btn-secondary");
     $("#cancel_download").show();
     var dt = dataset.get(2);
-    var model = $("#exportmodel").val();
+    var model = $("#model").val();
     var vars = $("#exportmodelvars").val();
     window.pending = 0;
     window.wsconnections = []
