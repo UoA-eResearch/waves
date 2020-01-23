@@ -315,7 +315,7 @@ function popupHandler(popup) {
     var dt = dataset.get(2);
     var bounds = Terraformer.WKT.convert(popup.target.toGeoJSON().geometry);
 
-    var bits = window.model.split("-");
+    var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
     var subvar = bits[1];
 
