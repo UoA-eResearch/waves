@@ -531,6 +531,14 @@ function fetchRangeForModel(model) {
             break;
         }
     }
+    console.log(model);
+    if (model.includes("NZ-HIST-000")) {
+        $("#exportmodelvars").multiselect();
+        $("#exportmodelvarsnew").multiselect("destroy");
+    } else {
+        $("#exportmodelvarsnew").multiselect();
+        $("#exportmodelvars").multiselect("destroy");
+    }
     console.log(range);
     var start = moment(range.min);
     var end = moment(range.max);
@@ -579,7 +587,11 @@ $("#download").click(function() {
     $("#cancel_download").show();
     var dt = dataset.get(2);
     var model = $("#model").val();
-    var vars = $("#exportmodelvars").val();
+    if (model.includes("NZ-HIST-000")) {
+        var vars = $("#exportmodelvars").val();
+    } else {
+        var vars = $("#exportmodelvarsnew").val();
+    }
     window.pending = 0;
     window.wsconnections = []
     $.each(vars, function(i, v) {
@@ -609,7 +621,7 @@ $("#download").click(function() {
         });
         */
 
-        $("#download_status").append('<div id="' + model + '_progress">' + model + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
+        $("#download_status").append('<div id="' + ftype + '_progress">' + ftype + ':<div class="downloadprogress progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0%" aria-valuemin="0%" aria-valuemax="100%" style="width: 0%">0%</div></div>')
 
         var ws = new WebSocket(wsUrl);
         window.pending++;
@@ -622,12 +634,12 @@ $("#download").click(function() {
             console.log(data);
             if ('progress' in data) {
                 var pct = Math.round(data.progress * 100);
-                $("#" + model + "_progress .downloadprogress").text(pct + "%");
-                $("#" + model + "_progress .downloadprogress").css("width", pct + "%");
-                $("#" + model + "_progress .downloadprogress").attr("aria-valuenow", pct);
+                $("#" + ftype + "_progress .downloadprogress").text(pct + "%");
+                $("#" + ftype + "_progress .downloadprogress").css("width", pct + "%");
+                $("#" + ftype + "_progress .downloadprogress").attr("aria-valuenow", pct);
             } else {
                 var url = baseUrl + data.url;
-                $("#" + model + "_progress").html(model + ' is ready - click <a href="' + url + '">here</a> to download');
+                $("#" + ftype + "_progress").html(ftype + ' is ready - click <a href="' + url + '">here</a> to download');
                 /*
                 $("#statustext a").click(function() {
                     gtag('event', 'download', {
@@ -894,9 +906,6 @@ $("#play").click(function() {
         clearInterval(playInterval);
     }
 });
-
-
-$('#exportmodelvars').multiselect();
 
 String.prototype.rsplit = function(sep, maxsplit) {
     var split = this.split(sep);

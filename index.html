@@ -90,7 +90,7 @@
                 </div>
                 <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
                     <h4>Step 2: Select variables to export</h4>
-                    <select id="exportmodelvars" class="form-control" aria-describedby="selectHelp" style="outline: none;" multiple>
+                    <select id="exportmodelvars" class="form-control" aria-describedby="selectHelp" style="outline: none;display:none" multiple>
                         <optgroup label="Integrated:">
                             <option value="HSIGN-Hsig">Hsig</option>
                             <option value="HSWELL-Hswell">Hswell</option>
@@ -116,6 +116,23 @@
                             <option value="PTWLEN">Wlen</option>
                             <option value="PTWFRAC">Wfrc</option>
                         </optgroup>
+                        <optgroup label="Other:">
+                            <option value="DEPTH-Depth">Bathymetry (Depth)</option>
+                            <option value="WIND-Windv_x">Winds - Windv_x</option>
+                            <option value="WIND-Windv_y">Winds - Windv_y</option>
+                        </optgroup>
+                    </select>
+                    <select id="exportmodelvarsnew" class="form-control" aria-describedby="selectHelp" style="outline: none;display:none" multiple>
+                        <optgroup label="Integrated:">
+                            <option value="HSIGN-Hsig">Hsig</option>
+                            <option value="DIR-Dir">Dir</option>
+                            <option value="PDIR-PkDir">PkDir</option>
+                            <option value="RTM01-RTm01">Tm01</option>
+                            <option value="TM02-Tm02">Tm02</option>
+                            <option value="RTP-RTpeak">Tpeak</option>
+                            <option value="DPSR-Dspr">Dspr</option>
+                        </optgroup>
+
                         <optgroup label="Other:">
                             <option value="DEPTH-Depth">Bathymetry (Depth)</option>
                             <option value="WIND-Windv_x">Winds - Windv_x</option>
