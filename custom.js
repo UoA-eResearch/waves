@@ -373,6 +373,25 @@ var wsUrl = "wss://wave.storm-surge.cloud.edu.au/wave_mysql/websocket";
 var markerLookup = {}
 var arrowMarkerLookup = {}
 
+var ranges = {
+    "NZ-HIST-000": {
+        "min": "1993-01-01 00:00",
+        "max": "2012-12-31 21:00"
+    },
+    "NZ-HIST-H": {
+        "min": "1993/01/01 00:00",
+        "max": "2005/12/31 21:00"
+    },
+    "NZ-PROJ-M": {
+        "min": "2026/01/01 00:00",
+        "max": "2045/12/31 21:00"
+    },
+    "NZ-PROJ-E": {
+        "min": "2081/01/01 00:00",
+        "max": "2100/12/31 21:00"
+    }
+}
+
 var dp = 4;
 
 var arrowIcon = new L.divIcon({
@@ -506,28 +525,31 @@ var ONE_DAY_MS = 1000 * 60 * 60 * 24;
 var ONE_YEAR_MS = ONE_DAY_MS * 365;
 
 function fetchRangeForModel(model) {
-    var table = model.replace("NZ-HIST-000-", "").rsplit("-", 1)[0];
-    $.getJSON(baseUrl + "range/" + table, function(data) {
-        console.log(data);
-        var start = moment(data.minDate);
-        var end = moment(data.maxDate);
-        dataset.update({id: 1, content: model, start: start, end: end});
-        var ct = timeline.getCustomTime(1);
-        if (ct < start || ct > end) {
-            timeline.setCustomTime(start, 1);
-            timeline.setCustomTimeTitle("Drag this control to display data for a specific date. Current time: " + dateFormat(start), 1);
+    for (var k in ranges) {
+        if (model.includes(k)) {
+            range=ranges[k];
+            break;
         }
-        timeline.setWindow(moment(start).subtract(1, "year"), moment(end).add(1, "year"));
-        var dateRange = dataset.get(2);
-        if (dateRange.start < start || dateRange.end > end) {
-            dataset.update({id: 2, start: start, end: moment(start).add(1, "year")});
-        }
-        markers.clearLayers();
-        arrowmarkers.clearLayers();
-        markerLookup = [];
-        arrowMarkerLookup = [];
-        fetchDataForModel(model, timeline.getCustomTime(1));
-    });
+    }
+    console.log(range);
+    var start = moment(range.min);
+    var end = moment(range.max);
+    dataset.update({id: 1, content: model, start: start, end: end});
+    var ct = timeline.getCustomTime(1);
+    if (ct < start || ct > end) {
+        timeline.setCustomTime(start, 1);
+        timeline.setCustomTimeTitle("Drag this control to display data for a specific date. Current time: " + dateFormat(start), 1);
+    }
+    timeline.setWindow(moment(start).subtract(1, "year"), moment(end).add(1, "year"));
+    var dateRange = dataset.get(2);
+    if (dateRange.start < start || dateRange.end > end) {
+        dataset.update({id: 2, start: start, end: moment(start).add(1, "year")});
+    }
+    markers.clearLayers();
+    arrowmarkers.clearLayers();
+    markerLookup = [];
+    arrowMarkerLookup = [];
+    fetchDataForModel(model, timeline.getCustomTime(1));
 }
 
 $("#model").change(function(e) {
