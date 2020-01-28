@@ -180,7 +180,7 @@ L.control.layers(baseMaps, overlays, { position: 'topright' }).addTo(map);
 var legendranges = {
     "Hsig": {
         min: 0,
-        max: 10,
+        max: 5,
         suffix: "m"
     },
     "RTpeak": {
