@@ -914,6 +914,9 @@ String.prototype.rsplit = function(sep, maxsplit) {
 
 var model = "NZ-HIST-000";
 var variable = "HSIGN-Hsig";
+if ($("#model").length) {
+    model = $("#model").val();
+}
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     var model_var = bits[0];
