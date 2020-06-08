@@ -532,13 +532,6 @@ function fetchRangeForModel(model) {
         }
     }
     console.log(model);
-    if (model.includes("NZ-HIST-000")) {
-        $("#exportmodelvars").multiselect();
-        $("#exportmodelvarsnew").multiselect("destroy");
-    } else {
-        $("#exportmodelvarsnew").multiselect();
-        $("#exportmodelvars").multiselect("destroy");
-    }
     console.log(range);
     var start = moment(range.min);
     var end = moment(range.max);
