@@ -10,6 +10,7 @@ import csv
 from zipfile import ZipFile, ZIP_DEFLATED
 import time
 import json
+import pandas as pd
 
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
@@ -159,16 +160,19 @@ def handle_websocket(db):
                 print("{}s - {} results to fetch".format(time.time() - s, count))
                 results = []
                 query = "SELECT ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
-                chunksize = 500
-                for i in range(0, count, chunksize):
-                    if count - i < chunksize:
-                        chunksize = count - i
-                    chunked_query = query + " LIMIT {} OFFSET {}".format(chunksize, i)
+                dates = pd.date_range(params["minDate"], params["maxDate"], freq="M")
+                print(dates)
+                for i in range(0, len(dates)):
+                    if i == (len(dates) - 1):
+                        chunked_query = query + " AND d.datetime > '{}'".format(dates[i])
+                    else:
+                        chunked_query = query + " AND d.datetime BETWEEN '{}' AND '{}'".format(dates[i], dates[i + 1])
+                    print(chunked_query)
                     db.execute(chunked_query)
                     print("{}s - query for chunk {} executed".format(time.time() - s, i))
                     theseresults = db.fetchall()
                     results.extend(theseresults)
-                    pct_done = float(i) / float(count)
+                    pct_done = float(i) / len(dates)
                     wsock.send(json.dumps({"progress": pct_done}))
             print("{}s - all {} results fetched".format(time.time() - s, len(results)))
             if params['format'] == 'csv':
