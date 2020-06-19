@@ -126,6 +126,13 @@ def get_range(db, table):
     result.update(db.fetchone())
     return result
 
+def deduplicate(list_of_dicts):
+    uniques = []
+    for d in list_of_dicts:
+        if d not in uniques:
+            uniques.append(d)
+    return uniques
+
 @application.route('/websocket')
 def handle_websocket(db):
     wsock = request.environ.get('wsgi.websocket')
@@ -163,10 +170,12 @@ def handle_websocket(db):
                 dates = pd.date_range(params["minDate"], params["maxDate"], freq="M")
                 print(dates)
                 for i in range(0, len(dates)):
-                    if i == (len(dates) - 1):
+                    if i == 0:
+                        chunked_query = query + " AND d.datetime < '{}'".format(dates[0])
+                    elif i == (len(dates) - 1):
                         chunked_query = query + " AND d.datetime > '{}'".format(dates[i])
                     else:
-                        chunked_query = query + " AND d.datetime BETWEEN '{}' AND '{}'".format(dates[i], dates[i + 1])
+                        chunked_query = query + " AND d.datetime BETWEEN '{}' AND '{}'".format(dates[i - 1], dates[i])
                     print(chunked_query)
                     db.execute(chunked_query)
                     print("{}s - query for chunk {} executed".format(time.time() - s, i))
@@ -174,6 +183,7 @@ def handle_websocket(db):
                     results.extend(theseresults)
                     pct_done = float(i) / len(dates)
                     wsock.send(json.dumps({"progress": pct_done}))
+            results = deduplicate(results)
             print("{}s - all {} results fetched".format(time.time() - s, len(results)))
             if params['format'] == 'csv':
                 filename = getFilenameForParams(params)
