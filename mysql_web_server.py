@@ -169,11 +169,11 @@ def handle_websocket(db):
                 query = "SELECT ST_Y(l.latlong) AS lat, ST_X(l.latlong) AS lng, {}, DATE_FORMAT(d.datetime, '%Y-%m-%d %H:%i:%s') AS datetime{}".format(params["var"], fromwhere)
                 dates = pd.date_range(params["minDate"], params["maxDate"], freq="M")
                 print(dates)
-                for i in range(0, len(dates)):
+                for i in range(0, len(dates) + 1):
                     if i == 0:
                         chunked_query = query + " AND d.datetime < '{}'".format(dates[0])
-                    elif i == (len(dates) - 1):
-                        chunked_query = query + " AND d.datetime > '{}'".format(dates[i])
+                    elif i == len(dates):
+                        chunked_query = query + " AND d.datetime > '{}'".format(dates[i - 1])
                     else:
                         chunked_query = query + " AND d.datetime BETWEEN '{}' AND '{}'".format(dates[i - 1], dates[i])
                     print(chunked_query)
@@ -181,7 +181,7 @@ def handle_websocket(db):
                     print("{}s - query for chunk {} executed".format(time.time() - s, i))
                     theseresults = db.fetchall()
                     results.extend(theseresults)
-                    pct_done = float(i) / len(dates)
+                    pct_done = float(i) / (len(dates) + 1)
                     wsock.send(json.dumps({"progress": pct_done}))
             results = deduplicate(results)
             print("{}s - all {} results fetched".format(time.time() - s, len(results)))
