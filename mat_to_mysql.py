@@ -121,6 +121,9 @@ def load_file(args):
     w = scipy.io.whosmat(f)
     t = [x[0][5:] for x in w if x[0].startswith("Time")]
     start = pd.to_datetime(t[0], format="%Y%m%d_%H%M%S")
+    if start.month in [6,12]: # prewarm
+        start = pd.to_datetime(t[20], format="%Y%m%d_%H%M%S")
+        print(f"This file contains prewarm results from {t[0]}, skipping to {t[20]}")
     end = pd.to_datetime(t[-1], format="%Y%m%d_%H%M%S")
     startid = times.get_loc(start)
     endid = times.get_loc(end)
