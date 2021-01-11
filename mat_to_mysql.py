@@ -14,7 +14,10 @@ from tqdm import tqdm
 files_to_process = sys.argv[1:]
 times = pd.date_range("1993-01-01", "2101-01-01", freq="3H")
 
-depth = pd.read_csv("depth_filtered.csv")
+with open("depth.json") as f:
+    depth_hindcast = json.load(f)
+
+depth_predictions = pd.read_csv("depth_filtered.csv")
 
 def init():
     global db, cur
@@ -113,11 +116,13 @@ def load_file(args):
     filename_without_ext = os.path.splitext(os.path.basename(f))[0]
     island, date_range, ftype = filename_without_ext.split("-")
 
+    depth = depth_hindcast
+
     if "models" in f:
         model = f.split("/")[-2]
         ftype = f"{model}-{ftype}"
+        depth = depth_predictions
 
-    start, end = date_range.split("_")
     w = scipy.io.whosmat(f)
     t = [x[0][5:] for x in w if x[0].startswith("Time")]
     start = pd.to_datetime(t[0], format="%Y%m%d_%H%M%S")
@@ -170,31 +175,68 @@ def load_file(args):
     )
     values = []
 
-    island_depth = depth[depth.island == island]
+    if "models" in f:
 
-    shape = mat["Xp"].shape
-    for t in tqdm(range(startid, endid + 1)):
-        date = times[t]
-        dateStr = date.strftime("%Y%m%d_%H%M%S")
-        values = []
-        for i, j in zip(island_depth.i, island_depth.j):
-            thisRow = [island, i, j, t]
-            for var in unique_keys:
-                key = var + "_" + dateStr
-                val = float(mat[key][i][j])
-                if np.isnan(val):
-                    val = None
-                if val == float('inf'):
-                    val = 9999
-                thisRow.append(val)
-            if any(thisRow[4:]):
-                values.append(thisRow)
-        log("{} values prepared, commencing executemany".format(len(values)))
-        cur.executemany(sql, values)
+        island_depth = depth[depth.island == island]
+
+        shape = mat["Xp"].shape
+        for t in tqdm(range(startid, endid + 1)):
+            date = times[t]
+            dateStr = date.strftime("%Y%m%d_%H%M%S")
+            values = []
+            for i, j in zip(island_depth.i, island_depth.j):
+                thisRow = [island, i, j, t]
+                for var in unique_keys:
+                    key = var + "_" + dateStr
+                    val = float(mat[key][i][j])
+                    if np.isnan(val):
+                        val = None
+                    if val == float('inf'):
+                        val = 9999
+                    thisRow.append(val)
+                if any(thisRow[4:]):
+                    values.append(thisRow)
+            log("{} values prepared, commencing executemany".format(len(values)))
+            cur.executemany(sql, values)
     
-    del mat
-    del values
-    db.commit()
+        del mat
+        del values
+        db.commit()
+
+    else:
+
+        shape = mat["Xp"].shape
+        values = []
+        for t in range(startid, endid + 1):
+            date = times[t]
+            dateStr = date.strftime("%Y%m%d_%H%M%S")
+            for i in range(shape[0]):
+                for j in range(shape[1]):
+                    if not depth[island.lower()][i][j] or depth[island.lower()][i][j] < 10:
+                        continue
+                    if island == "SI" and (j > 117 or i > 99):
+                        continue
+                    if island == "NI" and (j < 6 or i < 4):
+                        continue
+                    if island == "SI" and (i > 57 and j > 56):
+                        continue
+                    thisRow = [island, i, j, t]
+                    for var in unique_keys:
+                        key = var + "_" + dateStr
+                        val = float(mat[key][i][j])
+                        if np.isnan(val):
+                            val = None
+                        if val == float('inf'):
+                            val = 9999
+                        thisRow.append(val)
+                    if any(thisRow[4:]):
+                        values.append(thisRow)
+
+        log("{} values prepared, commencing executemany".format(len(values)))
+        del mat
+        cur.executemany(sql, values)
+        del values
+        db.commit()
 
     log("{} done. {} rows inserted".format(filename_without_ext, cur.rowcount))
 
