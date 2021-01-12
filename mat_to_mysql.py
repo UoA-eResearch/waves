@@ -210,6 +210,7 @@ def load_file(args):
         for t in range(startid, endid + 1):
             date = times[t]
             dateStr = date.strftime("%Y%m%d_%H%M%S")
+            values = []
             for i in range(shape[0]):
                 for j in range(shape[1]):
                     if not depth[island.lower()][i][j] or depth[island.lower()][i][j] < 10:
@@ -231,10 +232,10 @@ def load_file(args):
                         thisRow.append(val)
                     if any(thisRow[4:]):
                         values.append(thisRow)
+            log("{} values prepared, commencing executemany".format(len(values)))
+            cur.executemany(sql, values)
 
-        log("{} values prepared, commencing executemany".format(len(values)))
         del mat
-        cur.executemany(sql, values)
         del values
         db.commit()
 
