@@ -376,7 +376,7 @@ var arrowMarkerLookup = {}
 var ranges = {
     "NZ-HIST-000": {
         "min": "1993-01-01 00:00",
-        "max": "2012-12-31 21:00"
+        "max": "2019/12/31 21:00"
     },
     "NZ-HIST-H": {
         "min": "1993/01/01 00:00",

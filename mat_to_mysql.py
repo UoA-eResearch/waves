@@ -134,7 +134,8 @@ def load_file(args):
     endid = times.get_loc(end)
     print(startid, endid)
 
-    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, int(startid + (endid - startid) / 2))
+    checkpoint = int(startid + (endid - startid) * 0.75)
+    sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, checkpoint)
     try:
         cur.execute(sql)
         result = cur.fetchone()[0]
