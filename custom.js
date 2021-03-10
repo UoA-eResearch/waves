@@ -857,7 +857,7 @@ timeline.on('timechanged', function(e) {
     timeline.setCustomTime(dt, 1);
     var dateString = dateFormat(dt);
     $("#current").val(moment(dt).format("YYYY-MM-DDTHH:mm"));
-    timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
+    timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
     console.log("timechange", e, dateString);
     fetchDataForModel(window.model, dt);
 });
@@ -899,7 +899,7 @@ $("#play").click(function() {
             timeline.setCustomTime(newTime, 1);
             var dateString = dateFormat(newTime);
             $("#current").val(moment(newTime).format("YYYY-MM-DDTHH:mm"));
-            timeline.setCustomTimeTitle("Drag this control to display the storm surge data for a specific date. Current time: " + dateString, 1);
+            timeline.setCustomTimeTitle("Drag this control to display the wave data for a specific date. Current time: " + dateString, 1);
             fetchDataForModel(window.model, dateString);
         }, 2000);
     } else {
