@@ -317,6 +317,9 @@ function popupHandler(popup) {
 
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
+    if (model.includes("NZ-HIST-000")) {
+        ftype += "_new";
+    }
     var subvar = bits[1];
 
     var payload = {
@@ -488,11 +491,14 @@ function fetchDataForModel(model, dt) {
     console.log("fetching", baseUrl, model, dt);
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
+    if (model.includes("NZ-HIST-000")) {
+        ftype += "_new";
+    }
     var subvar = bits[1];
     window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
-        var dirftype = "DIR";
+        var dirftype = "DIR_new";
         if (ftype.includes("-")) {
             dirftype = ftype.rsplit("-", 1)[0] + "-DIR";
         }
@@ -592,6 +598,8 @@ $("#download").click(function() {
         var ftype = bits[0];
         if (model != "NZ-HIST-000") {
             ftype = model + "-" + ftype;
+        } else {
+            ftype += "_new";
         }
         var subvar = bits[1];
 
