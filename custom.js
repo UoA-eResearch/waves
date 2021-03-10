@@ -317,7 +317,7 @@ function popupHandler(popup) {
 
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
-    if (model.includes("NZ-HIST-000")) {
+    if (model.includes("NZ-HIST-000") && ftype != "DEPTH") {
         ftype += "_new";
     }
     var subvar = bits[1];
@@ -491,10 +491,10 @@ function fetchDataForModel(model, dt) {
     console.log("fetching", baseUrl, model, dt);
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
-    if (model.includes("NZ-HIST-000")) {
+    var subvar = bits[1];
+    if (model.includes("NZ-HIST-000") && ftype != "DEPTH") {
         ftype += "_new";
     }
-    var subvar = bits[1];
     window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
@@ -598,7 +598,7 @@ $("#download").click(function() {
         var ftype = bits[0];
         if (model != "NZ-HIST-000") {
             ftype = model + "-" + ftype;
-        } else {
+        } else if (ftype != "DEPTH") {
             ftype += "_new";
         }
         var subvar = bits[1];
