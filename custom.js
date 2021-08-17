@@ -318,7 +318,7 @@ function popupHandler(popup) {
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
     var ftype = bits[0];
     if (model.includes("NZ-HIST-000") && ftype != "DEPTH") {
-        ftype += "_new";
+        ftype += "_new2";
     }
     var subvar = bits[1];
 
@@ -493,12 +493,12 @@ function fetchDataForModel(model, dt) {
     var ftype = bits[0];
     var subvar = bits[1];
     if (model.includes("NZ-HIST-000") && ftype != "DEPTH") {
-        ftype += "_new";
+        ftype += "_new2";
     }
     window.subvar = subvar;
     map.spin(true);
     if (subvar != "Dir") {
-        var dirftype = "DIR_new";
+        var dirftype = "DIR_new2";
         if (ftype.includes("-")) {
             dirftype = ftype.rsplit("-", 1)[0] + "-DIR";
         }
@@ -599,7 +599,7 @@ $("#download").click(function() {
         if (model != "NZ-HIST-000") {
             ftype = model + "-" + ftype;
         } else if (ftype != "DEPTH") {
-            ftype += "_new";
+            ftype += "_new2";
         }
         var subvar = bits[1];
 
