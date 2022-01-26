@@ -14,6 +14,7 @@ from tqdm import tqdm
 files_to_process = sys.argv[1:]
 times = pd.date_range("1993-01-01", "2101-01-01", freq="3H")
 more_times = pd.date_range("1986-01-01", "1993-01-01", freq="3H")
+ONE_MILLION = int(1e6)
 
 with open("depth.json") as f:
     depth_hindcast = json.load(f)
@@ -51,7 +52,7 @@ if "date" in files_to_process:
     for k, v in enumerate(times):
         values.append((k, str(v)))
     for k, v in enumerate(more_times[:-1]):
-        values.append((k + 1e6, str(v)))
+        values.append((k + ONE_MILLION, str(v)))
     cur.executemany(sql, values)
     db.commit()
     log("date table built. {} rows inserted".format(cur.rowcount))
@@ -137,8 +138,8 @@ def load_file(args):
         startid = times.get_loc(start)
         endid = times.get_loc(end)
     except KeyError:
-        startid = more_times.get_loc(start) + 1e6
-        endid = more_times.get_loc(end) + 1e6
+        startid = more_times.get_loc(start) + ONE_MILLION
+        endid = more_times.get_loc(end) + ONE_MILLION
     print(startid, endid)
 
     ftype = ftype + "_new"
@@ -191,7 +192,10 @@ def load_file(args):
 
         shape = mat["Xp"].shape
         for t in tqdm(range(startid, endid + 1)):
-            date = times[t]
+            try:
+                date = times[t]
+            except IndexError:
+                date = more_times[t - ONE_MILLION]
             dateStr = date.strftime("%Y%m%d_%H%M%S")
             values = []
             for i, j in zip(island_depth.i, island_depth.j):
@@ -218,7 +222,10 @@ def load_file(args):
         shape = mat["Xp"].shape
         values = []
         for t in range(startid, endid + 1):
-            date = times[t]
+            try:
+                date = times[t]
+            except IndexError:
+                date = more_times[t - ONE_MILLION]
             dateStr = date.strftime("%Y%m%d_%H%M%S")
             values = []
             for i in range(shape[0]):
