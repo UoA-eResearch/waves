@@ -13,6 +13,7 @@ from tqdm import tqdm
 
 files_to_process = sys.argv[1:]
 times = pd.date_range("1993-01-01", "2101-01-01", freq="3H")
+more_times = pd.date_range("1986-01-01", "1993-01-01", freq="3H")
 
 with open("depth.json") as f:
     depth_hindcast = json.load(f)
@@ -49,6 +50,8 @@ if "date" in files_to_process:
     values = []
     for k, v in enumerate(times):
         values.append((k, str(v)))
+    for k, v in enumerate(more_times[:-1]):
+        values.append((k + 1e6, str(v)))
     cur.executemany(sql, values)
     db.commit()
     log("date table built. {} rows inserted".format(cur.rowcount))
@@ -130,9 +133,15 @@ def load_file(args):
         start = pd.to_datetime(t[20], format="%Y%m%d_%H%M%S")
         print(f"This file contains prewarm results from {t[0]}, skipping to {t[20]}")
     end = pd.to_datetime(t[-1], format="%Y%m%d_%H%M%S")
-    startid = times.get_loc(start)
-    endid = times.get_loc(end)
+    try:
+        startid = times.get_loc(start)
+        endid = times.get_loc(end)
+    except KeyError:
+        startid = more_times.get_loc(start) + 1e6
+        endid = more_times.get_loc(end) + 1e6
     print(startid, endid)
+
+    ftype = ftype + "_new"
 
     checkpoint = int(startid + (endid - startid) * 0.75)
     sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, checkpoint)
