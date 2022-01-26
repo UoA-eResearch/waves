@@ -922,6 +922,7 @@ var variable = "HSIGN-Hsig";
 if ($("#model").length) {
     model = $("#model").val();
 }
+
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     var model_var = bits[0];
@@ -952,3 +953,12 @@ $('#export-tab').on('shown.bs.tab', function (e) {
     $("#download_info #start").val(moment(dataset.get(2).start).format("YYYY-MM-DDTHH:mm"));
     $("#download_info #end").val(moment(dataset.get(2).end).format("YYYY-MM-DDTHH:mm"));
 })
+
+alert(`Kia ora!
+
+Thanks for your interest in our site and our data - it is greatly appreciated!
+
+We are currently updating our 21st century projections database. This is a very long process, which requires most of our server's capacity. This means that data download will be very slow, so please be patient while we are working on that.
+
+Yours sincerely
+Coast and Ocean Collective`)
