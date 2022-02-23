@@ -605,6 +605,9 @@ $("#download").click(function() {
         } else if (ftype != "DEPTH") {
             ftype += "_new2";
         }
+        if (model.startsWith("NZ-")) {
+            ftype += "_new";
+        }
         var subvar = bits[1];
 
         var payload = {
