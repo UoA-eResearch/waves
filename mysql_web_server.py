@@ -52,7 +52,7 @@ def getQueryForParams(params):
         optimal_index = "t"
     else:
         optimal_index = "ixyt"
-    fromwhere = " FROM `" + params['ftype'] + "` m INNER JOIN `" + params["lltable"] + "` l ON m.island = l.island AND m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id INNER JOIN " + params["depthtable"] + " z ON m.island = z.island AND m.x = z.x AND m.y = z.y "
+    fromwhere = " FROM `" + params['ftype'] + "` m USE INDEX(" + optimal_index + ") INNER JOIN `" + params["lltable"] + "` l ON m.island = l.island AND m.x = l.x AND m.y = l.y INNER JOIN date d ON m.t = d.id INNER JOIN " + params["depthtable"] + " z ON m.island = z.island AND m.x = z.x AND m.y = z.y "
     fromwhere += "WHERE MBRContains(ST_GeomFromText('" + params['bounds'] + "'), l.latlong) AND d.datetime BETWEEN '" + params['minDate'] + "' AND '" + params['maxDate'] + "' AND z.Depth > 30"
     return fromwhere
 
