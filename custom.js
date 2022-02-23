@@ -602,11 +602,9 @@ $("#download").click(function() {
         var ftype = bits[0];
         if (model != "NZ-HIST-000") {
             ftype = model + "-" + ftype;
+            ftype += "_new";
         } else if (ftype != "DEPTH") {
             ftype += "_new2";
-        }
-        if (model.startsWith("NZ-")) {
-            ftype += "_new";
         }
         var subvar = bits[1];
 
