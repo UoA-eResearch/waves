@@ -88,9 +88,11 @@ def writeCSV(filename, results):
         writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction='ignore')
         writer.writeheader()
         writer.writerows(results)
+    print("CSV written")
     zipfilename = filename_with_path.replace(".csv", ".zip")
     with ZipFile(zipfilename, "w", ZIP_DEFLATED) as zip:
         zip.write(filename_with_path, filename)
+    print("ZIP written")
     os.remove(filename_with_path)
     return zipfilename
 
@@ -127,11 +129,11 @@ def get_range(db, table):
     return result
 
 def deduplicate(list_of_dicts):
-    uniques = []
+    uniques = {}
     for d in list_of_dicts:
-        if d not in uniques:
-            uniques.append(d)
-    return uniques
+        unique_id = f"{d['lat']}_{d['lng']}_{d['datetime']}"
+        uniques[unique_id] = d
+    return list(uniques.values())
 
 @application.route('/websocket')
 def handle_websocket(db):
@@ -183,8 +185,9 @@ def handle_websocket(db):
                     results.extend(theseresults)
                     pct_done = float(i) / (len(dates) + 1)
                     wsock.send(json.dumps({"progress": pct_done}))
+            print(f"{time.time() - s}s - all {len(results)} results fetched")
             results = deduplicate(results)
-            print("{}s - all {} results fetched".format(time.time() - s, len(results)))
+            print(f"{time.time() - s} deduplicated")
             if params['format'] == 'csv':
                 filename = getFilenameForParams(params)
                 zipfilename = writeCSV(filename, results)
