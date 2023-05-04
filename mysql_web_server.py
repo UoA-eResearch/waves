@@ -72,7 +72,7 @@ def getFilenameForParams(params, ext = 'csv'):
         lngS += "E"
     filename = "{}-{}-{}-{}-{}{}.{}".format(
         params['ftype'],
-        params['var'],
+        params['var'].replace("m.*", "all"),
         params['minDate'][:params['minDate'].index(" ")].replace("-", ""),
         params['maxDate'][:params['maxDate'].index(" ")].replace("-", ""),
         lngS,
