@@ -150,7 +150,7 @@ map.on(L.Draw.Event.DELETESTOP, function() {
 map.createPane('labels');
 map.getPane('labels').style.zIndex = 625;
 map.getPane('labels').style.pointerEvents = 'none';
-var labels = L.tileLayer.provider("Stamen.TonerLabels", {
+var labels = L.tileLayer.provider("CartoDB.PositronOnlyLabels", {
     pane: "labels",
     interactive: false,
     opacity: .8,
@@ -161,7 +161,7 @@ map.createPane('whitelabels');
 map.getPane('whitelabels').style.zIndex = 625;
 map.getPane('whitelabels').style.pointerEvents = 'none';
 map.getPane('whitelabels').style.filter = 'invert(100%)';
-var whitelabels = L.tileLayer.provider("Stamen.TonerLabels", {
+var whitelabels = L.tileLayer.provider("CartoDB.PositronOnlyLabels", {
     pane: "whitelabels",
     interactive: false,
     opacity: .8,
@@ -172,7 +172,7 @@ var overlays = {
     "Markers": markers,
     "Arrows": arrowmarkers,
     "City labels": labels,
-    "City labels (white)": whitelabels,
+    "City labels (inverted)": whitelabels,
 }
 
 L.control.layers(baseMaps, overlays, { position: 'topright' }).addTo(map);
