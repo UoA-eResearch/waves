@@ -204,6 +204,7 @@ var legendranges = {
         suffix: "m"
     }
 }
+legendranges["hs"] = legendranges["Hsig"];
 
 var colormap = chroma.scale([chroma.hsv(270,1,1), chroma.hsv(180,1,1), chroma.hsv(90,1,1), chroma.hsv(0,1,1)]).mode("hsv");
 var fullcolormap = chroma.scale([chroma.hsv(360,1,1), chroma.hsv(270,1,1), chroma.hsv(180,1,1), chroma.hsv(90,1,1), chroma.hsv(0,1,1)]).mode("hsv");
@@ -394,6 +395,10 @@ var ranges = {
     "NZ-PROJ-E": {
         "min": "2081/01/01 00:00",
         "max": "2100/12/31 21:00"
+    },
+    "WHACS": {
+        "min": "1979/01/01 00:00",
+        "max": "2023/12/31 23:00"
     }
 }
 
@@ -441,6 +446,10 @@ function handleData(data) {
     window.lastvar = subvar;
     for (var i in data.results) {
         var d = data.results[i];
+        if (!d.lat) {
+            d.lat = d.latitude;
+            d.lng = d.longitude;
+        }
         var v = d[subvar];
         var desc = "(" + d.lat.toFixed(dp) + "°," + d.lng.toFixed(dp) + "°)=" + v.toFixed(dp);
         var normalized_v = ((v - min) / (max - min));
@@ -501,7 +510,7 @@ function fetchDataForModel(model, dt) {
     }
     window.subvar = subvar;
     map.spin(true);
-    if (subvar != "Dir") {
+    if (subvar != "Dir" && ftype != "WHACS") {
         var dirftype = "DIR_new2";
         if (ftype.includes("-")) {
             dirftype = ftype.rsplit("-", 1)[0] + "-DIR_new";
@@ -693,7 +702,12 @@ function dateFormat(date){
 
 function snapDate(date) {
     var hour = date.getHours();
-    date.setHours(Math.round(hour / 3) * 3);
+    if (model.includes("WHACS")) {
+        var snapto = 1;
+    } else {
+        var snapto = 3
+    }
+    date.setHours(Math.round(hour / snapto) * snapto);
     date.setMinutes(0);
     date.setSeconds(0);
     return date;
@@ -924,15 +938,27 @@ if ($("#model").length) {
     model = $("#model").val();
 }
 
+if (model == "WHACS") {
+    variable = "hs";
+    baseUrl = "https://wave.storm-surge.cloud.edu.au/WHACS_API/";
+}
+
 if (location.hash.length > 1) {
     var bits = decodeURIComponent(location.hash.slice(1)).split("@");
     var model_var = bits[0];
     var dt = bits[1];
-    model = model_var.substring(0,11);
-    variable = model_var.substring(12);
+    if (model.includes("WHACS")) {
+        model = "WHACS";
+        variable = "hs";
+    } else {
+        model = model_var.substring(0,11);
+        variable = model_var.substring(12);
+    }
     console.log(model, variable);
-    $("#model").val(model);
-    $("#var").val(variable);
+    if (variable) {
+        $("#model").val(model);
+        $("#var").val(variable);
+    }
     timeline.addCustomTime(dt, 1);
 } else {
     timeline.addCustomTime("1993-01-01 00:00", 1);

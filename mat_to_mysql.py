@@ -115,6 +115,8 @@ if "depth" in files_to_process:
 def load_file(args):
     i = args[0]
     f = args[1]
+    if "DEPTH" in f:
+        return
     log("loading {}/{}: {}".format(i, len(files_to_process), f))
 
     filename_without_ext = os.path.splitext(os.path.basename(f))[0]
@@ -142,7 +144,7 @@ def load_file(args):
         endid = more_times.get_loc(end) + ONE_MILLION
     print(startid, endid)
 
-    ftype = ftype + "_new"
+    ftype = ftype + "_new6"
 
     checkpoint = int(startid + (endid - startid) * 0.75)
     sql = "SELECT EXISTS(SELECT 1 FROM `{}` WHERE island='{}' AND t={})".format(ftype, island, checkpoint)

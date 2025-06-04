@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+    <head>
+        <title>WHACS hindcast 1979-2023</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.3/dist/leaflet.draw.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"/>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+        <link rel="stylesheet" href="custom.css"/>
+        <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet-src.js"></script>
+        <script src="https://unpkg.com/leaflet-draw@1.0.3/dist/leaflet.draw.js"></script>
+        <script src="https://unpkg.com/leaflet-providers@1.4.0/leaflet-providers.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/hayeswise/Leaflet.PointInPolygon@v1.0.0/wise-leaflet-pip.js"></script>
+        <script src="https://unpkg.com/terraformer@1.0.8/terraformer.js"></script>
+        <script src="https://unpkg.com/terraformer-wkt-parser@1.1.2/terraformer-wkt-parser.js"></script>
+        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js"></script>
+        <script src="https://unpkg.com/vis@4.21.0/dist/vis.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+        <script src="https://unpkg.com/leaflet-spin@1.1.0/leaflet.spin.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+        <script src="https://unpkg.com/leaflet-rotatedmarker@0.2.0/leaflet.rotatedMarker.js"></script>
+        <script src="https://unpkg.com/leaflet-svg-shape-markers@1.1.0/dist/leaflet-svg-shape-markers.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.0.3/chroma.min.js"></script>
+
+    </head>
+    <body>
+        <h1 id="title">WHACS hindcast 1979-2023</h1>
+        <div id="map"></div>
+        <div id="mainControls">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="vis-tab" data-toggle="tab" href="#vis" role="tab" aria-controls="vis" aria-selected="true">Data Visualisation</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="export-tab" data-toggle="tab" href="#export" role="tab" aria-controls="export" aria-selected="false">Data Exporting</a>
+                </li>
+            </ul>
+
+            
+            <select id="model" class="form-control" aria-describedby="selectHelp" style="outline: none;display:none">
+                <option value="WHACS" selected>WHACS hindcast 1979-2023</option>
+            </select>
+
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="vis" role="tabpanel" aria-labelledby="vis-tab">
+                        <form>
+                            <h4>Select a variable to visualise</h4>
+                            <div class="form-group">
+                                <select id="var" class="form-control" aria-describedby="selectHelp" style="outline: none;">
+                                    <option value="hs" selected>hs</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                Displayed time:
+                                <input id="current" type="datetime-local" class="form-control"></input>
+                            </div>
+                        </form>
+                </div>
+                <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
+                    <h4>Step 1: Select variables to export</h4>
+                    <select id="exportmodelvars" class="form-control selectpicker" aria-describedby="selectHelp" multiple>
+                        <optgroup label="Integrated:">
+                            <option value="HSIGN-Hsig">Hsig</option>
+                        </optgroup>
+                    </select>
+                    <select id="exportmodelvarsnew" class="form-control" aria-describedby="selectHelp" style="outline: none;display:none" multiple>
+                        <optgroup label="Integrated:">
+                            <option value="HSIGN-Hsig">Hsig</option>
+                            <option value="DIR-Dir">Dir</option>
+                            <option value="PDIR-PkDir">PkDir</option>
+                            <option value="RTM01-RTm01">Tm01</option>
+                            <option value="TM02-Tm02">Tm02</option>
+                            <option value="RTP-RTpeak">Tpeak</option>
+                            <option value="DPSR-Dspr">Dspr</option>
+                        </optgroup>
+
+                        <optgroup label="Other:">
+                            <option value="DEPTH-Depth">Bathymetry (Depth)</option>
+                            <option value="WIND-Windv_x">Winds - Windv_x</option>
+                            <option value="WIND-Windv_y">Winds - Windv_y</option>
+                        </optgroup>
+                    </select>
+                    <small id="selectHelp" class="form-text">
+                        For an explanation of these variables, please click <a href="https://data.csiro.au/collection/csiro:64350">here</a>
+                    </small>
+
+                    <div id="download_info">
+                        <h4>Step 2: Select data points</h4>
+                        <small>To select a subset of data points, use the polygon or rectangle tool. Making a new selection will replace the previous selection.</small>
+                        <div id="control"></div>
+                        <h6>
+                            <span id="selected_points">0</span> data points selected.
+                        </h6>
+                        <h4>Step 3: Select a time range</h4>
+                        <small>Adjust the time range here or by dragging the ends of the timeseries export range control at the bottom.</small>
+                        <h6>Timeseries range:</h6>
+                        <form class="form-inline">
+                            <input id="start" type="datetime-local" class="form-control"></input>-
+                            <input id="end" type="datetime-local" class="form-control"></input>
+                        </form>
+                        <h6>
+                            <span id="selected_days">0</span> days selected.
+                        </h6>
+                        <h6>
+                            <span id="total_rows">0</span> total rows for export. <span id="est_time_wrapper">Estimated (worst-case) time to export: about <span id="est_time">1 minute</span></span>
+                        </h6>
+                        <button id="download" class="btn btn-primary">Export</button>
+                        <button id="cancel_download" class="btn btn-danger" style="display:none">Cancel</button>
+                        <h6 id="statustext"></h6>
+                        <div id="download_status">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="timeline">
+            <div id="buttons">
+                <button type="button" class="btn" id="play"><i class="fas fa-play"></i></button>
+                <button type="button" onclick="timeline.zoomIn(1)" class="btn" id="zoomIn"><i class="fas fa-search-plus"></i></button>
+                <button type="button" onclick="timeline.zoomOut(1)" class="btn" id="zoomOut"><i class="fas fa-search-minus"></i></button>
+            </div>
+        </div>
+        <script src="custom.js"></script>
+    </body>
+</html>
