@@ -348,6 +348,8 @@ function popupHandler(popup) {
             container.text("");
             plotData(container, data.results);
         });
+        var download_URL = `${baseUrl}?minDate=${dateFormat(dt.start)}&maxDate=${dateFormat(dt.end)}&ftype=${ftype}&var=${subvar}&lat=${payload.lat}&lng=${payload.lng}&format=csv`;
+        $(popup.popup._contentNode).append(`<a href="${download_URL}" target="_blank">Download CSV</a>`);
         return;
     }
     try {
