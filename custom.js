@@ -205,6 +205,8 @@ var legendranges = {
     }
 }
 legendranges["hs"] = legendranges["Hsig"];
+legendranges["dir"] = legendranges["Dir"];
+legendranges["t01"] = legendranges["RTm01"];
 
 var colormap = chroma.scale([chroma.hsv(270,1,1), chroma.hsv(180,1,1), chroma.hsv(90,1,1), chroma.hsv(0,1,1)]).mode("hsv");
 var fullcolormap = chroma.scale([chroma.hsv(360,1,1), chroma.hsv(270,1,1), chroma.hsv(180,1,1), chroma.hsv(90,1,1), chroma.hsv(0,1,1)]).mode("hsv");
