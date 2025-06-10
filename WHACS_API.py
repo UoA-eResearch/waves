@@ -21,16 +21,17 @@ app.add_middleware(
 )
 
 @app.get("/")
-def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01 01:00:00", var:str = "hs", format:str = "json"):
+async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01 01:00:00", var:str = "hs", format:str = "json"):
     try:
         s = time.time()
+        print(minDate, maxDate, var, format)
         date = pd.to_datetime(minDate)
         filename = glob(f"WHACS/{var}_NZ/{var}_WHACS_hindcast_WHACS_ERA5_1hr_{date.year}{date.month:02d}*")[0]
         print(filename)
         if not os.path.isfile(filename):
             raise HTTPException(status_code=404, detail=f"File {filename} not found")
-        ds = xr.open_dataset(filename).drop_vars("projected_coordinate_system")
-        df = ds.sel(time=slice(minDate, maxDate)).to_dataframe()
+        with xr.open_dataset(filename) as ds:
+            df = ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe()
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
             return {"results": df.to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}

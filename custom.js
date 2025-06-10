@@ -533,7 +533,27 @@ function fetchDataForModel(model, dt) {
                 }
             }
         });
+    } else if (subvar != "dir" && ftype == "WHACS") {
+        $.getJSON(baseUrl, { var: "dir", minDate: dt, maxDate: dt }, function(data) {
+            data = data.results.filter(function(value, index, Arr) {
+                return index % 50 == 0;
+            });
+            for (var v of data) {
+                var arrowMarker = arrowMarkerLookup[v.latitude + "_" + v.longitude];
+                if (!arrowMarker) {
+                    var arrowMarker = new L.marker([v.latitude, v.longitude],{
+                        icon: arrowIcon,
+                        rotationOrigin: "center center",
+                        interactive: false,
+                    });
+                    arrowMarker.addTo(arrowmarkers);
+                    arrowMarkerLookup[v.latitude + "_" + v.longitude] = arrowMarker;
+                }
+                arrowMarker.setRotationAngle(v.dir + 180);
+            }
+        });
     }
+
     $.getJSON(baseUrl, { ftype: ftype, var: subvar, minDate: dt, maxDate: dt }, handleData).fail(function(e) {
         alert("There was an error fetching data for " + model + ": " + e.status + " " + e.statusText);
         console.error(e);
