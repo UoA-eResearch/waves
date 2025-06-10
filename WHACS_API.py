@@ -25,17 +25,21 @@ async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01
     try:
         s = time.time()
         print(minDate, maxDate, var, format)
-        date = pd.to_datetime(minDate)
-        filename = glob(f"WHACS/{var}_NZ/{var}_WHACS_hindcast_WHACS_ERA5_1hr_{date.year}{date.month:02d}*")[0]
-        print(filename)
-        if not os.path.isfile(filename):
-            raise HTTPException(status_code=404, detail=f"File {filename} not found")
-        with xr.open_dataset(filename) as ds:
-            if lat is not None and lng is not None:
-                point = (ds.longitude.to_pandas() == lng) & (ds.latitude.to_pandas() == lat)
-                print(point[point])
-                ds = ds.sel(seapoint=point.idxmax())
-            df = ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index()
+        months = pd.date_range(minDate[:7], maxDate[:7], freq="MS")
+        print(months)
+        dfs = []
+        for month in months:
+            filename = glob(f"WHACS/{var}_NZ/{var}_WHACS_hindcast_WHACS_ERA5_1hr_{month.year}{month.month:02d}*")[0]
+            print(filename)
+            if not os.path.isfile(filename):
+                raise HTTPException(status_code=404, detail=f"File {filename} not found")
+            with xr.open_dataset(filename) as ds:
+                if lat is not None and lng is not None:
+                    point = (ds.longitude.to_pandas() == lng) & (ds.latitude.to_pandas() == lat)
+                    print(point[point])
+                    ds = ds.sel(seapoint=point.idxmax())
+                dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
+        df = pd.concat(dfs, ignore_index=True)
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
             return {"results": df.to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}
