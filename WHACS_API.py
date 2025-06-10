@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 @app.get("/")
-async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01 01:00:00", var:str = "hs", format:str = "json"):
+async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01 01:00:00", var:str = "hs", lat=None, lng=None, format:str = "json"):
     try:
         s = time.time()
         print(minDate, maxDate, var, format)
@@ -31,7 +31,10 @@ async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01
         if not os.path.isfile(filename):
             raise HTTPException(status_code=404, detail=f"File {filename} not found")
         with xr.open_dataset(filename) as ds:
-            df = ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe()
+            if lat is not None and lng is not None:
+                point = (ds.longitude.to_pandas() == lng) & (ds.latitude.to_pandas() == lat)
+                ds = ds.sel(seapoint=point.idxmax())
+            df = ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index()
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
             return {"results": df.to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}

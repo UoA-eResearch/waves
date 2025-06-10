@@ -272,7 +272,11 @@ function plotData(container, results) {
     }
     var title = subvar + "(" + suffix + ")";
     var d3 = Plotly.d3
-    var dts = unpack(results, 'datetime')
+    if (results.datetime) {
+        var dts = unpack(results, 'datetime')
+    } else {
+        var dts = unpack(results, 'time')
+    }
     var values = unpack(results, subvar)
     var mean = d3.mean(values)
     var means = [];
@@ -312,8 +316,8 @@ function plotData(container, results) {
 }
 
 function popupHandler(popup) {
-    console.log(popup);
     var dt = dataset.get(2);
+    console.log(popup, model, dt);
     var bounds = Terraformer.WKT.convert(popup.target.toGeoJSON().geometry);
 
     var bits = model.replace("NZ-HIST-000-", "").rsplit("-", 1);
@@ -333,6 +337,17 @@ function popupHandler(popup) {
         bounds: bounds
     }
     var container = $("#graph", popup.popup._contentNode);
+    if (model.includes("WHACS")) {
+        payload["lat"] = popup.target.getLatLng().lat;
+        payload["lng"] = popup.target.getLatLng().lng;
+        $.getJSON(baseUrl, payload, function(data) {
+            console.log(data);
+            clearInterval(chartProgressInterval);
+            container.text("");
+            plotData(container, data.results);
+        });
+        return;
+    }
     try {
         var ws = new WebSocket(wsUrl);
         ws.onopen = function() {
@@ -353,6 +368,7 @@ function popupHandler(popup) {
             }
         };
     } catch(err) {
+        console.log(err)
         var start = new Date();
         var days = $('#selected_days').text();
         var est_time_instance = Math.round(days * rows_per_sec);
@@ -961,6 +977,7 @@ if ($("#model").length) {
 if (model == "WHACS") {
     variable = "hs";
     baseUrl = "https://wave.storm-surge.cloud.edu.au/WHACS_API/";
+    wsUrl = null; // no websocket for WHACS
 }
 
 if (location.hash.length > 1) {
