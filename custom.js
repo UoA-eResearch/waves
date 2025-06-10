@@ -457,6 +457,9 @@ function handleData(data) {
     }
     var midVal = (max + min) / 2;
     dp = 1;
+    if (model.includes("WHACS")) {
+        dp = 2;
+    }
     $("#colorbar #max").val(max.toFixed(dp));
     $("#colorbar #maxsuffix").text(details.suffix);
     $("#colorbar #mid").text(midVal.toFixed(dp) + details.suffix);
