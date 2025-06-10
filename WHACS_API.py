@@ -8,18 +8,7 @@ import xarray as xr
 from glob import glob
 import pandas as pd
 import time
-
-s = time.time()
-files = pd.Series(sorted(glob("WHACS/hs/*.nc")))
-
-ds = xr.open_dataset(files[535])
-NZ_points = ds.longitude.to_pandas().between(165, 180) & ds.latitude.to_pandas().between(-48, -33)
-NZ_points = NZ_points[NZ_points].index
-
-print(f"Found {len(NZ_points)} NZ points in the first file")
-ds = xr.open_mfdataset(files)
-ds = ds.isel(seapoint=list(NZ_points)).drop_vars("projected_coordinate_system")
-print(f"Loaded dataset in {time.time() - s:.2f} seconds")
+import os
 
 app = FastAPI(root_path="/WHACS_API")
 
@@ -35,10 +24,16 @@ app.add_middleware(
 def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01 01:00:00", var:str = "hs", format:str = "json"):
     try:
         s = time.time()
+        date = pd.to_datetime(minDate)
+        filename = glob(f"WHACS/{var}_NZ/{var}_WHACS_hindcast_WHACS_ERA5_1hr_{date.year}{date.month:02d}*")[0]
+        print(filename)
+        if not os.path.isfile(filename):
+            raise HTTPException(status_code=404, detail=f"File {filename} not found")
+        ds = xr.open_dataset(filename).drop_vars("projected_coordinate_system")
         df = ds.sel(time=slice(minDate, maxDate)).to_dataframe()
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
-            return {"results": df.to_dict("records")}
+            return {"results": df.to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}
         elif format == "csv":
             csv = df.to_csv(index=False)
             return PlainTextResponse(csv)

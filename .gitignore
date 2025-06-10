@@ -109,3 +109,4 @@ exports
 config.py
 *.out
 misc
+WHACS
