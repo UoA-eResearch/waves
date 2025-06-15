@@ -274,7 +274,7 @@ function plotData(container, results) {
     }
     var title = subvar + "(" + suffix + ")";
     var d3 = Plotly.d3
-    if (results.datetime) {
+    if (results[0].datetime) {
         var dts = unpack(results, 'datetime')
     } else {
         var dts = unpack(results, 'time')
