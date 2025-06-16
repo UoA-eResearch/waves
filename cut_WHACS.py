@@ -5,9 +5,12 @@ from glob import glob
 import pandas as pd
 from tqdm.contrib.concurrent import process_map
 import os
+import sys
 
-files = pd.Series(glob("WHACS/000064350v001/data/release/WP3/WHACS/BoM-CSIRO/hindcast/ERA5/ERA5/WHACS/WWIII-v6.07/global/1hr/t01/*.nc"))
-output_folder = "WHACS/t01_NZ/"
+var = sys.argv[1]
+
+files = pd.Series(glob(f"/mnt/WHACS/000064350v001/data/release/WP3/WHACS/BoM-CSIRO/hindcast/ERA5/ERA5/WHACS/WWIII-v6.07/global/1hr/{var}/*.nc"))
+output_folder = "WHACS/{var}_NZ/"
 os.makedirs(output_folder, exist_ok=True)
 
 def process_file(f):
