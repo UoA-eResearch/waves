@@ -1024,3 +1024,6 @@ $('#export-tab').on('shown.bs.tab', function (e) {
     $("#download_info #start").val(moment(dataset.get(2).start).format("YYYY-MM-DDTHH:mm"));
     $("#download_info #end").val(moment(dataset.get(2).end).format("YYYY-MM-DDTHH:mm"));
 })
+
+// Fixing some sort of race condition
+$("div.vis-timeline").attr("visibility", "visible");
