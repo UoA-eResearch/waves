@@ -474,7 +474,7 @@ function handleData(data) {
             d.lng = d.longitude;
         }
         var v = d[subvar];
-        var desc = "(" + d.lat.toFixed(dp) + "°," + d.lng.toFixed(dp) + "°)=" + v.toFixed(dp);
+        var desc = "(" + d.lat.toFixed(dp) + "°," + d.lng.toFixed(dp) + "°)=" + v?.toFixed(dp);
         var normalized_v = ((v - min) / (max - min));
         if (normalized_v < 0) normalized_v = 0;
         if (normalized_v > 1) normalized_v = 1;

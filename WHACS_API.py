@@ -9,6 +9,7 @@ from glob import glob
 import pandas as pd
 import time
 import os
+import numpy as np
 
 app = FastAPI(root_path="/WHACS_API")
 
@@ -42,7 +43,7 @@ async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01
         df = pd.concat(dfs, ignore_index=True)
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
-            return {"results": df.to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}
+            return {"results": df.replace({np.nan:None}).to_dict("records"), "count": len(df), "filename": os.path.basename(filename), "timing": f"{time.time() - s:.2f} seconds"}
         elif format == "csv":
             csv = df.to_csv(index=False)
             return PlainTextResponse(csv)
