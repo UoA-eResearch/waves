@@ -7,7 +7,17 @@ from botocore.config import Config
 import pandas as pd
 import xarray as xr
 from tqdm.contrib.concurrent import process_map
+from glob import glob
 pd.set_option("display.max_colwidth", None)
+import re
+
+seapoint_lookup = {}
+files = pd.Series(glob("WHACS/hs_NZ/*.nc"))
+for f in tqdm(files):
+  dt = re.search(r"_(\d+)-", f).group(1)
+  ds = xr.open_dataset(f)
+  seapoint_lookup[dt] = ds.seapoint
+print("Seapoint lookup created for all files.")
 
 s3 = boto3.client(
     "s3",
@@ -29,9 +39,16 @@ for page in pages:
 
 files = pd.DataFrame(files, columns=["file_path"])
 files["variable"] = files["file_path"].str.extract(r"/1hr/(\w+)/")
+files["filename"] = files.file_path.apply(lambda x: os.path.basename(x))
 
-have = [s.strip("_NZ") for s in os.listdir("WHACS")]
-missing = set(files.variable.unique()) - set(have)
+have = pd.DataFrame(glob("WHACS/*/*.nc"), columns=["file_path"])
+have["filesize"] = have.file_path.apply(lambda x: os.path.getsize(x))
+have["filename"] = have.file_path.apply(lambda x: os.path.basename(x))
+have = have[have.filesize > 100]
+
+print(files.filename.isin(have.filename).value_counts())
+files = files[~files.filename.isin(have.filename)]
+missing = files.variable.unique()
 missing = sorted(list(missing))
 
 def process_file(file_path):
@@ -39,8 +56,10 @@ def process_file(file_path):
   s3.download_file(Bucket="dapprd", Key=file_path, Filename=tmp_file_path)
   output_file = output_folder + os.path.basename(file_path)
   ds = xr.open_dataset(tmp_file_path)
-  NZ_points = ds.longitude.to_pandas().between(165, 180) & ds.latitude.to_pandas().between(-48, -33)
-  NZ_points = NZ_points[NZ_points].index
+  #NZ_points = ds.longitude.to_pandas().between(165, 180) & ds.latitude.to_pandas().between(-48, -33)
+  #NZ_points = NZ_points[NZ_points].index
+  dt = re.search(r"_(\d+)-", os.path.basename(file_path)).group(1)
+  NZ_points = seapoint_lookup[dt]
   ds.sel(seapoint=NZ_points).to_netcdf(output_file)
   os.remove(tmp_file_path)
 
