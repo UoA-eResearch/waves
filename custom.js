@@ -613,6 +613,8 @@ function fetchRangeForModel(model) {
     markerLookup = [];
     arrowMarkerLookup = [];
     fetchDataForModel(model, timeline.getCustomTime(1));
+    // Fixing some sort of race condition
+    $("div.vis-timeline").css("visibility", "visible");
 }
 
 $("#model").change(function(e) {
@@ -1024,6 +1026,3 @@ $('#export-tab').on('shown.bs.tab', function (e) {
     $("#download_info #start").val(moment(dataset.get(2).start).format("YYYY-MM-DDTHH:mm"));
     $("#download_info #end").val(moment(dataset.get(2).end).format("YYYY-MM-DDTHH:mm"));
 })
-
-// Fixing some sort of race condition
-$("div.vis-timeline").attr("visibility", "visible");
