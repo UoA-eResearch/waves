@@ -22,8 +22,8 @@ print("Seapoint lookup created for all files.")
 
 s3 = boto3.client(
     "s3",
-    aws_access_key_id="RY8ILQIO5HX8ZSX0Y2EI",
-    aws_secret_access_key="6rTMrXDgj5q2ytqwC5VgZv5DRJ5pbmvRISN4RrI3",
+    aws_access_key_id="272F6H8JVIDHPCIVJCX8",
+    aws_secret_access_key="roLJnieG7sh3VD4qgGny+/1DdRYH8d7m/gFCVnU7",
     endpoint_url="https://s3.data.csiro.au",
     config=Config(signature_version="s3v4")
 )
