@@ -10,6 +10,7 @@ import pandas as pd
 import time
 import os
 import numpy as np
+import traceback
 
 app = FastAPI(root_path="/WHACS_API")
 
@@ -37,9 +38,23 @@ async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01
             with xr.open_dataset(filename) as ds:
                 if lat is not None and lng is not None:
                     point = (ds.longitude.to_pandas() == lng) & (ds.latitude.to_pandas() == lat)
-                    print(point[point])
-                    ds = ds.sel(seapoint=point.idxmax())
-                dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
+                    if len(point[point]) > 0:
+                        ds = ds.sel(seapoint=point.idxmax())
+                        dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
+                else:
+                    dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
+            CI_filename = glob(f"WHACS/{var}_CI/{var}_WHACS_hindcast_WHACS_ERA5_1hr_{month.year}{month.month:02d}*")
+            if len(CI_filename) > 0:
+                CI_filename = CI_filename[0]
+                print(CI_filename)
+                with xr.open_dataset(CI_filename) as ds:
+                    if lat is not None and lng is not None:
+                        point = (ds.longitude.to_pandas() == lng) & (ds.latitude.to_pandas() == lat)
+                        if len(point[point]) > 0:
+                            ds = ds.sel(seapoint=point.idxmax())
+                            dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
+                    else:
+                        dfs.append(ds.drop_vars("projected_coordinate_system").sel(time=slice(minDate, maxDate)).to_dataframe().reset_index())
         df = pd.concat(dfs, ignore_index=True)
         print(f"Subset data in {time.time() - s:.2f} seconds")
         if format == "json":
@@ -48,5 +63,5 @@ async def get_var(minDate:str = "1994-02-01 01:00:00", maxDate:str = "1994-02-01
             csv = df.to_csv(index=False)
             return PlainTextResponse(csv)
     except Exception as e:
-        print(e)
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

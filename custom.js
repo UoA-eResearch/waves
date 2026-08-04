@@ -3,7 +3,8 @@ var map = L.map('map', {
     zoom: 6,
     minZoom: 5,
     maxZoom: 13,
-    zoomControl: false
+    zoomControl: false,
+    worldCopyJump: true,
 });
 L.control.zoom({position: 'topright'}).addTo(map);
 map.doubleClickZoom.disable();
@@ -26,7 +27,7 @@ bounds._northEast.lat += degreeLimit * 3;
 bounds._northEast.lng += degreeLimit;
 bounds._southWest.lat -= degreeLimit;
 bounds._southWest.lng -= degreeLimit;
-map.setMaxBounds(bounds);
+//map.setMaxBounds(bounds);
 
 var baseMaps = {
     "CartoDB Positron": L.tileLayer.provider('CartoDB.PositronNoLabels'),
