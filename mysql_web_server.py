@@ -172,7 +172,10 @@ def handle_websocket(db):
                 dates = pd.date_range(params["minDate"], params["maxDate"], freq="M")
                 print(dates)
                 for i in range(0, len(dates) + 1):
-                    if i == 0:
+                    if len(dates) == 0:
+                        # Date range doesn't span a month end, so fetch it in a single chunk
+                        chunked_query = query
+                    elif i == 0:
                         chunked_query = query + " AND d.datetime < '{}'".format(dates[0])
                     elif i == len(dates):
                         chunked_query = query + " AND d.datetime > '{}'".format(dates[i - 1])
