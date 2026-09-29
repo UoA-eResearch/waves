@@ -35,7 +35,7 @@ var baseMaps = {
     "ESRI WorldImagery": L.tileLayer.provider("Esri.WorldImagery"),
 };
 
-baseMaps["CartoDB Positron"].addTo(map);
+baseMaps["ESRI WorldImagery"].addTo(map);
 
 var drawnItems = new L.FeatureGroup();
 map.addLayer(drawnItems);
