@@ -156,7 +156,7 @@ var labels = L.tileLayer.provider("CartoDB.PositronOnlyLabels", {
     interactive: false,
     opacity: .8,
 });
-labels.addTo(map);
+//labels.addTo(map);
 
 map.createPane('whitelabels');
 map.getPane('whitelabels').style.zIndex = 625;
