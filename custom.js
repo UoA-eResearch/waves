@@ -29,9 +29,27 @@ bounds._southWest.lat -= degreeLimit;
 bounds._southWest.lng -= degreeLimit;
 //map.setMaxBounds(bounds);
 
+// OpenFreeMap vector basemap (free, no API key): https://openfreemap.org
+// labels: false drops the text labels, "only" keeps just the labels
+function openFreeMap(style, options) {
+    var layer = L.maplibreGL(options);
+    layer.on("add", function() {
+        var labels = layer.options.labels;
+        if (layer.options.opacity !== undefined) layer.getContainer().style.opacity = layer.options.opacity;
+        layer.getMaplibreMap().setStyle("https://tiles.openfreemap.org/styles/" + style, {
+            transformStyle: function(previous, next) {
+                if (labels === false) next.layers = next.layers.filter(function(l) { return l.type != "symbol"; });
+                if (labels == "only") next.layers = next.layers.filter(function(l) { return l.type == "symbol"; });
+                return next;
+            }
+        });
+    });
+    return layer;
+}
+
 var baseMaps = {
-    "CartoDB Positron": L.tileLayer.provider('CartoDB.PositronNoLabels'),
-    "CartoDB Dark Matter": L.tileLayer.provider("CartoDB.DarkMatterNoLabels"),
+    "OpenFreeMap Positron": openFreeMap('positron', {labels: false}),
+    "OpenFreeMap Dark": openFreeMap("dark", {labels: false}),
     "ESRI WorldImagery": L.tileLayer.provider("Esri.WorldImagery"),
 };
 
@@ -151,7 +169,8 @@ map.on(L.Draw.Event.DELETESTOP, function() {
 map.createPane('labels');
 map.getPane('labels').style.zIndex = 625;
 map.getPane('labels').style.pointerEvents = 'none';
-var labels = L.tileLayer.provider("CartoDB.PositronOnlyLabels", {
+var labels = openFreeMap("positron", {
+    labels: "only",
     pane: "labels",
     interactive: false,
     opacity: .8,
@@ -162,7 +181,8 @@ map.createPane('whitelabels');
 map.getPane('whitelabels').style.zIndex = 625;
 map.getPane('whitelabels').style.pointerEvents = 'none';
 map.getPane('whitelabels').style.filter = 'invert(100%)';
-var whitelabels = L.tileLayer.provider("CartoDB.PositronOnlyLabels", {
+var whitelabels = openFreeMap("positron", {
+    labels: "only",
     pane: "whitelabels",
     interactive: false,
     opacity: .8,
